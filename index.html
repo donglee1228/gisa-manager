@@ -94,8 +94,8 @@ h2{text-align:center;font-size:18px;color:#aaa;margin-bottom:16px}
 .print-overlay.show{display:block}
 .print-box{
   background:#1a1a2e;border:1px solid #333;border-radius:12px;
-  padding:16px;white-space:pre-wrap;font-family:monospace;font-size:13px;
-  line-height:1.6;color:#eee;margin-bottom:12px;
+  padding:12px;white-space:pre-wrap;font-family:monospace;font-size:11px;
+  line-height:1.45;color:#eee;margin-bottom:12px;
 }
 .print-actions{display:flex;gap:8px;margin-bottom:12px}
 .print-actions button{
@@ -135,7 +135,10 @@ h2{text-align:center;font-size:18px;color:#aaa;margin-bottom:16px}
   <div id="historyArea" style="display:none"></div>
 
   <!-- 출력하기 -->
-  <button class="print-btn" onclick="printRecord()">출력하기 (메모장)</button>
+  <div style="display:flex;gap:8px;margin:16px 0">
+    <button class="print-btn" style="flex:1;margin:0" onclick="printWorker('김기사')">김기사 출력</button>
+    <button class="print-btn" style="flex:1;margin:0" onclick="printWorker('이기사')">이기사 출력</button>
+  </div>
 </div>
 
 <!-- 출력 모달 -->
@@ -420,50 +423,43 @@ function renderHistory() {
   area.innerHTML = html;
 }
 
-// ===== 출력하기 (화면에 표시 + 복사) =====
-let printText = "";
-
-window.printRecord = function() {
+// ===== 출력하기 (기사별 개별 출력) =====
+window.printWorker = function(worker) {
   const dates = Object.keys(allRecords).sort();
   if (dates.length === 0) { alert("기록이 없습니다"); return; }
 
   const dayNames = ["일","월","화","수","목","금","토"];
-  printText = "";
+  let text = `[ ${worker} ]\n\n`;
+  let workerTotal = 0;
+  const siteTotals = {};
 
-  WORKERS.forEach(worker => {
-    printText += `========== ${worker} ==========\n\n`;
+  for (const dk of dates) {
+    const wr = allRecords[dk]?.[worker];
+    if (!wr) continue;
 
-    let workerTotal = 0;
-    const siteTotals = {};
+    const [y,m,d] = dk.split("-");
+    const dt = new Date(+y, +m-1, +d);
+    const dayName = dayNames[dt.getDay()];
 
-    for (const dk of dates) {
-      const wr = allRecords[dk]?.[worker];
-      if (!wr) continue;
-
-      const [y,m,d] = dk.split("-");
-      const dt = new Date(+y, +m-1, +d);
-      const dayName = dayNames[dt.getDay()];
-
-      const parts = [];
-      let dayTotal = 0;
-      for (const [site, cnt] of Object.entries(wr)) {
-        parts.push(`${site} ${cnt}회전`);
-        dayTotal += cnt;
-        siteTotals[site] = (siteTotals[site] || 0) + cnt;
-      }
-      workerTotal += dayTotal;
-
-      printText += `${+m}월 ${+d}일 ${dayName}요일  ${parts.join(" / ")}  (+${dayTotal})\n`;
+    const parts = [];
+    let dayTotal = 0;
+    for (const [site, cnt] of Object.entries(wr)) {
+      parts.push(`${site} ${cnt}`);
+      dayTotal += cnt;
+      siteTotals[site] = (siteTotals[site] || 0) + cnt;
     }
+    workerTotal += dayTotal;
 
-    printText += `\n--- 합계 ---\n`;
-    for (const [site, cnt] of Object.entries(siteTotals)) {
-      printText += `${site}: ${cnt}회전\n`;
-    }
-    printText += `총 합계: ${workerTotal}회전\n\n\n`;
-  });
+    text += `${+m}/${+d} ${dayName}  ${parts.join(" / ")}  +${dayTotal}\n`;
+  }
 
-  document.getElementById("printBox").textContent = printText;
+  text += `\n──────────\n`;
+  for (const [site, cnt] of Object.entries(siteTotals)) {
+    text += `${site}: ${cnt}\n`;
+  }
+  text += `합계: ${workerTotal}회전`;
+
+  document.getElementById("printBox").textContent = text;
   document.getElementById("printOverlay").classList.add("show");
   document.getElementById("copyMsg").textContent = "";
 };
