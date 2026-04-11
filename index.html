@@ -85,6 +85,26 @@ h2{text-align:center;font-size:18px;color:#aaa;margin-bottom:16px}
   text-align:center;padding:40px 20px;
 }
 .expired h1{color:#e94560;margin-bottom:16px}
+
+/* 출력 모달 */
+.print-overlay{
+  display:none;position:fixed;top:0;left:0;right:0;bottom:0;
+  background:rgba(0,0,0,0.85);z-index:200;padding:16px;overflow-y:auto;
+}
+.print-overlay.show{display:block}
+.print-box{
+  background:#1a1a2e;border:1px solid #333;border-radius:12px;
+  padding:16px;white-space:pre-wrap;font-family:monospace;font-size:13px;
+  line-height:1.6;color:#eee;margin-bottom:12px;
+}
+.print-actions{display:flex;gap:8px;margin-bottom:12px}
+.print-actions button{
+  flex:1;padding:12px;font-size:15px;font-weight:600;border:none;
+  border-radius:10px;cursor:pointer;color:#fff;
+}
+.copy-btn{background:#4CAF50}
+.close-print-btn{background:#555}
+.copy-msg{text-align:center;font-size:14px;color:#4CAF50;min-height:20px;margin-bottom:8px}
 </style>
 </head>
 <body>
@@ -116,6 +136,16 @@ h2{text-align:center;font-size:18px;color:#aaa;margin-bottom:16px}
 
   <!-- 출력하기 -->
   <button class="print-btn" onclick="printRecord()">출력하기 (메모장)</button>
+</div>
+
+<!-- 출력 모달 -->
+<div class="print-overlay" id="printOverlay">
+  <div class="print-actions">
+    <button class="copy-btn" onclick="copyPrint()">복사하기</button>
+    <button class="close-print-btn" onclick="closePrint()">닫기</button>
+  </div>
+  <div class="copy-msg" id="copyMsg"></div>
+  <div class="print-box" id="printBox"></div>
 </div>
 
 <div id="expiredScreen" style="display:none">
@@ -390,17 +420,18 @@ function renderHistory() {
   area.innerHTML = html;
 }
 
-// ===== 출력하기 (메모장 텍스트 다운로드) =====
+// ===== 출력하기 (화면에 표시 + 복사) =====
+let printText = "";
+
 window.printRecord = function() {
   const dates = Object.keys(allRecords).sort();
   if (dates.length === 0) { alert("기록이 없습니다"); return; }
 
   const dayNames = ["일","월","화","수","목","금","토"];
-  let text = "";
+  printText = "";
 
-  // 기사별로 분리 출력
   WORKERS.forEach(worker => {
-    text += `========== ${worker} ==========\n\n`;
+    printText += `========== ${worker} ==========\n\n`;
 
     let workerTotal = 0;
     const siteTotals = {};
@@ -422,24 +453,38 @@ window.printRecord = function() {
       }
       workerTotal += dayTotal;
 
-      text += `${+m}월 ${+d}일 ${dayName}요일  ${parts.join(" / ")}  (+${dayTotal})\n`;
+      printText += `${+m}월 ${+d}일 ${dayName}요일  ${parts.join(" / ")}  (+${dayTotal})\n`;
     }
 
-    text += `\n--- 합계 ---\n`;
+    printText += `\n--- 합계 ---\n`;
     for (const [site, cnt] of Object.entries(siteTotals)) {
-      text += `${site}: ${cnt}회전\n`;
+      printText += `${site}: ${cnt}회전\n`;
     }
-    text += `총 합계: ${workerTotal}회전\n\n\n`;
+    printText += `총 합계: ${workerTotal}회전\n\n\n`;
   });
 
-  // 텍스트 파일 다운로드
-  const now = new Date();
-  const fileName = `기사기록_${now.getFullYear()}${String(now.getMonth()+1).padStart(2,"0")}${String(now.getDate()).padStart(2,"0")}.txt`;
-  const blob = new Blob(["\uFEFF" + text], { type: "text/plain;charset=utf-8" });
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = fileName;
-  a.click();
+  document.getElementById("printBox").textContent = printText;
+  document.getElementById("printOverlay").classList.add("show");
+  document.getElementById("copyMsg").textContent = "";
+};
+
+window.copyPrint = async function() {
+  try {
+    await navigator.clipboard.writeText(printText);
+    document.getElementById("copyMsg").textContent = "복사 완료! 카톡/메모에 붙여넣기 하세요";
+  } catch(e) {
+    // 클립보드 실패 시 선택 방식
+    const box = document.getElementById("printBox");
+    const range = document.createRange();
+    range.selectNodeContents(box);
+    window.getSelection().removeAllRanges();
+    window.getSelection().addRange(range);
+    document.getElementById("copyMsg").textContent = "텍스트가 선택됨 - 복사해주세요";
+  }
+};
+
+window.closePrint = function() {
+  document.getElementById("printOverlay").classList.remove("show");
 };
 
 // ===== Firebase 실시간 리스너 =====
