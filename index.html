@@ -380,8 +380,11 @@ function renderHistory() {
     WORKERS.forEach(w => {
       const wr = dayRec[w] || {};
       const parts = Object.entries(wr).map(([s,c]) => `${s}${c}`).join(" ");
-      const total = Object.values(wr).reduce((a,b) => a+b, 0);
-      html += `<td>${parts || "-"}</td>`;
+      if (parts) {
+        html += `<td>${parts} <span style="color:#e94560;cursor:pointer;font-size:11px" onclick="deleteRecord('${dk}','${w}')">[x]</span></td>`;
+      } else {
+        html += `<td>-</td>`;
+      }
     });
     html += '</tr>';
   }
@@ -422,6 +425,16 @@ function renderHistory() {
 
   area.innerHTML = html;
 }
+
+// ===== 기록 삭제 =====
+window.deleteRecord = async function(dk, worker) {
+  const [y,m,d] = dk.split("-");
+  const dayNames = ["일","월","화","수","목","금","토"];
+  const dt = new Date(+y, +m-1, +d);
+  if (confirm(`${+m}/${+d}(${dayNames[dt.getDay()]}) ${worker} 기록 삭제?`)) {
+    await remove(ref(db, `records/${dk}/${worker}`));
+  }
+};
 
 // ===== 출력하기 (기사별 개별 출력) =====
 window.printWorker = function(worker) {
