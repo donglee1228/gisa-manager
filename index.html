@@ -73,6 +73,23 @@ h2{text-align:center;font-size:18px;color:#aaa;margin-bottom:16px}
 .close-print-btn{background:#555}
 .copy-msg{text-align:center;font-size:14px;color:#4CAF50;min-height:20px;margin-bottom:8px}
 
+/* 수정하기 */
+.edit-box{background:#16213e;border-radius:12px;padding:16px;margin:8px 0}
+.edit-date{
+  width:100%;padding:12px;background:#1a1a2e;border:1px solid #444;
+  border-radius:8px;color:#eee;font-size:16px;color-scheme:dark;
+}
+.edit-existing-item{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:8px 12px;margin:4px 0;background:#1a1a2e;border-radius:8px;font-size:14px;
+}
+.edit-delete-btn{
+  width:100%;padding:12px;margin-top:8px;font-size:15px;font-weight:600;
+  background:none;border:1px solid #e94560;border-radius:12px;
+  color:#e94560;cursor:pointer;
+}
+.edit-delete-btn:active{opacity:0.8}
+
 /* 설정 */
 .settings-btn{
   position:fixed;top:12px;right:12px;background:none;border:none;
@@ -123,6 +140,23 @@ h2{text-align:center;font-size:18px;color:#aaa;margin-bottom:16px}
   <div class="history-toggle" onclick="toggleHistory()">이전 기록 보기 ▼</div>
   <div id="historyArea" style="display:none"></div>
   <div id="printButtons"></div>
+
+  <!-- 수정하기 -->
+  <div class="divider"></div>
+  <div class="history-toggle" onclick="toggleEdit()">수정하기 ▼</div>
+  <div id="editArea" style="display:none">
+    <div class="edit-box">
+      <div class="section-label">날짜 선택</div>
+      <input type="date" id="editDate" class="edit-date" onchange="loadEditDate()">
+      <div class="section-label" style="margin-top:12px">기사</div>
+      <div class="worker-row" id="editWorkerRow"></div>
+      <div id="editSiteSections"></div>
+      <div id="editExisting"></div>
+      <button class="save-btn" id="editSaveBtn" disabled onclick="saveEdit()">수정 저장</button>
+      <button class="edit-delete-btn" id="editDeleteBtn" style="display:none" onclick="deleteEdit()">이 날 기록 삭제</button>
+      <div class="save-msg" id="editMsg"></div>
+    </div>
+  </div>
 </div>
 
 <!-- 출력 모달 -->
@@ -464,6 +498,158 @@ window.copyPrint = async function() {
   }
 };
 window.closePrint = function() { document.getElementById("printOverlay").classList.remove("show"); };
+
+// ===== 수정하기 =====
+let editWorker = null;
+let editCounts = {};
+
+window.toggleEdit = function() {
+  const area = document.getElementById("editArea");
+  if (area.style.display === "none") {
+    area.style.display = "block";
+    // 오늘 날짜 기본 세팅
+    const wd = getWorkDate();
+    document.getElementById("editDate").value = dateKey(wd);
+    editWorker = null;
+    editCounts = {};
+    renderEditWorkers();
+    renderEditSites();
+    loadEditDate();
+  } else {
+    area.style.display = "none";
+  }
+};
+
+function renderEditWorkers() {
+  const row = document.getElementById("editWorkerRow");
+  row.innerHTML = "";
+  WORKERS.forEach((name, i) => {
+    const btn = document.createElement("div");
+    btn.className = "worker-btn" + (editWorker === i ? " selected" : "");
+    btn.textContent = name;
+    btn.onclick = () => {
+      editWorker = i;
+      renderEditWorkers();
+      loadEditDate();
+      updateEditBtn();
+    };
+    row.appendChild(btn);
+  });
+}
+
+function renderEditSites() {
+  const container = document.getElementById("editSiteSections");
+  container.innerHTML = "";
+  SITES.forEach((site, si) => {
+    const section = document.createElement("div");
+    section.className = "site-section";
+    const label = document.createElement("div");
+    label.className = "site-name";
+    label.style.color = site.color;
+    label.textContent = site.name;
+    section.appendChild(label);
+    const row = document.createElement("div");
+    row.className = "count-row";
+    for (let c = 0; c <= MAX_COUNT; c++) {
+      const btn = document.createElement("div");
+      btn.className = "count-btn" + (editCounts[si] === c ? " selected" : "");
+      btn.textContent = c;
+      btn.style.borderColor = editCounts[si] === c ? site.color : "#333";
+      btn.style.background = editCounts[si] === c ? site.color + "22" : "#16213e";
+      btn.style.color = editCounts[si] === c ? site.color : "#eee";
+      btn.onclick = () => { editCounts[si] = c; renderEditSites(); updateEditBtn(); };
+      row.appendChild(btn);
+    }
+    section.appendChild(row);
+    container.appendChild(section);
+  });
+}
+
+window.loadEditDate = function() {
+  const dk = document.getElementById("editDate").value;
+  if (!dk) return;
+  const existing = document.getElementById("editExisting");
+  const dayRec = allRecords[dk] || {};
+  const delBtn = document.getElementById("editDeleteBtn");
+
+  // 선택된 기사의 기존 기록 불러오기
+  if (editWorker !== null) {
+    const worker = WORKERS[editWorker];
+    const wr = dayRec[worker] || {};
+    // 기존 값으로 카운트 세팅
+    editCounts = {};
+    SITES.forEach((site, si) => {
+      if (wr[site.name]) editCounts[si] = wr[site.name];
+    });
+    renderEditSites();
+    delBtn.style.display = Object.keys(wr).length > 0 ? "block" : "none";
+  }
+
+  // 해당 날짜 전체 기록 표시
+  let html = '<div class="section-label" style="margin-top:12px">이 날 기록</div>';
+  if (Object.keys(dayRec).length === 0) {
+    html += '<div class="edit-existing-item" style="color:#888">기록 없음</div>';
+  } else {
+    for (const [w, sites] of Object.entries(dayRec)) {
+      const parts = Object.entries(sites).map(([s,c]) => `${s} x${c}`).join(", ");
+      const total = Object.values(sites).reduce((a,b) => a+b, 0);
+      html += `<div class="edit-existing-item"><span>${w}</span><span>${parts} (${total})</span></div>`;
+    }
+  }
+  existing.innerHTML = html;
+  updateEditBtn();
+};
+
+function updateEditBtn() {
+  const btn = document.getElementById("editSaveBtn");
+  const dk = document.getElementById("editDate").value;
+  btn.disabled = !(editWorker !== null && dk);
+}
+
+window.saveEdit = async function() {
+  if (editWorker === null) return;
+  const dk = document.getElementById("editDate").value;
+  if (!dk) return;
+  const worker = WORKERS[editWorker];
+
+  const data = {};
+  SITES.forEach((site, si) => {
+    if (editCounts[si] > 0) data[site.name] = editCounts[si];
+  });
+
+  if (Object.keys(data).length === 0) {
+    // 전부 0이면 삭제
+    await remove(ref(db, `records/${dk}/${worker}`));
+  } else {
+    await set(ref(db, `records/${dk}/${worker}`), data);
+  }
+  await set(ref(db, "lastActivity"), Date.now());
+
+  const msg = document.getElementById("editMsg");
+  const [y,m,d] = dk.split("-");
+  const parts = Object.entries(data).map(([k,v]) => `${k} x${v}`).join(", ");
+  msg.textContent = `${+m}/${+d} ${worker}: ${parts || "삭제"} 완료!`;
+  msg.style.color = "#4CAF50";
+  setTimeout(() => { msg.textContent = ""; }, 3000);
+
+  loadEditDate();
+};
+
+window.deleteEdit = async function() {
+  if (editWorker === null) return;
+  const dk = document.getElementById("editDate").value;
+  const worker = WORKERS[editWorker];
+  if (confirm(`${dk} ${worker} 기록 삭제?`)) {
+    await remove(ref(db, `records/${dk}/${worker}`));
+    editCounts = {};
+    renderEditSites();
+    loadEditDate();
+    const msg = document.getElementById("editMsg");
+    msg.textContent = "삭제 완료!";
+    msg.style.color = "#e94560";
+    setTimeout(() => { msg.textContent = ""; }, 3000);
+  }
+};
 
 // ===== 설정 화면 =====
 window.openSettings = function() {
