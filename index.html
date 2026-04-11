@@ -15,8 +15,6 @@ body{
 }
 h2{text-align:center;font-size:18px;color:#aaa;margin-bottom:16px}
 .work-date{text-align:center;font-size:22px;font-weight:800;margin:12px 0 20px;color:#e94560}
-
-/* 기사 선택 */
 .section-label{font-size:13px;color:#888;margin-bottom:8px}
 .worker-row{display:flex;gap:10px;margin-bottom:20px}
 .worker-btn{
@@ -26,8 +24,6 @@ h2{text-align:center;font-size:18px;color:#aaa;margin-bottom:16px}
 }
 .worker-btn.selected{border-color:#e94560;background:#2a1a3e;color:#e94560}
 .worker-btn:active{transform:scale(0.97)}
-
-/* 현장 회전수 */
 .site-section{margin-bottom:18px}
 .site-name{font-size:16px;font-weight:700;margin-bottom:8px;padding-left:4px}
 .count-row{display:flex;gap:8px}
@@ -38,8 +34,6 @@ h2{text-align:center;font-size:18px;color:#aaa;margin-bottom:16px}
 }
 .count-btn.selected{border-color:#4CAF50;background:#1a3e2e;color:#4CAF50}
 .count-btn:active{transform:scale(0.95)}
-
-/* 저장 버튼 */
 .save-btn{
   width:100%;padding:16px;margin:20px 0;font-size:18px;font-weight:700;
   background:#e94560;border:none;border-radius:14px;color:#fff;cursor:pointer;
@@ -47,46 +41,22 @@ h2{text-align:center;font-size:18px;color:#aaa;margin-bottom:16px}
 .save-btn:active{opacity:0.8}
 .save-btn:disabled{background:#555;color:#888}
 .save-msg{text-align:center;font-size:14px;min-height:24px;margin-bottom:12px}
-
-/* 구분선 */
 .divider{border-top:1px solid #333;margin:20px 0}
-
-/* 오늘 기록 */
-.record-card{
-  background:#16213e;border-radius:12px;padding:14px;margin:8px 0;
-}
+.record-card{background:#16213e;border-radius:12px;padding:14px;margin:8px 0}
 .record-header{font-weight:700;font-size:15px;margin-bottom:6px}
 .record-detail{font-size:14px;color:#aaa}
 .record-detail span{margin-right:12px}
-
-/* 이전 기록 */
-.history-toggle{
-  text-align:center;color:#888;font-size:14px;cursor:pointer;
-  padding:12px;margin-top:8px;
-}
-.history-table{
-  width:100%;border-collapse:collapse;margin-top:12px;font-size:14px;
-}
-.history-table th,.history-table td{
-  padding:8px 6px;text-align:center;border-bottom:1px solid #333;
-}
+.history-toggle{text-align:center;color:#888;font-size:14px;cursor:pointer;padding:12px;margin-top:8px}
+.history-table{width:100%;border-collapse:collapse;margin-top:12px;font-size:14px}
+.history-table th,.history-table td{padding:8px 6px;text-align:center;border-bottom:1px solid #333}
 .history-table th{color:#888;font-size:12px}
-
-/* 출력 버튼 */
 .print-btn{
   width:100%;padding:14px;margin:16px 0;font-size:16px;font-weight:600;
-  background:#0f3460;border:1px solid #2196F3;border-radius:12px;
-  color:#2196F3;cursor:pointer;
+  background:#0f3460;border:1px solid #2196F3;border-radius:12px;color:#2196F3;cursor:pointer;
 }
 .print-btn:active{opacity:0.8}
-
-/* 만료 */
-.expired{
-  text-align:center;padding:40px 20px;
-}
+.expired{text-align:center;padding:40px 20px}
 .expired h1{color:#e94560;margin-bottom:16px}
-
-/* 출력 모달 */
 .print-overlay{
   display:none;position:fixed;top:0;left:0;right:0;bottom:0;
   background:rgba(0,0,0,0.85);z-index:200;padding:16px;overflow-y:auto;
@@ -98,47 +68,61 @@ h2{text-align:center;font-size:18px;color:#aaa;margin-bottom:16px}
   line-height:1.45;color:#eee;margin-bottom:12px;
 }
 .print-actions{display:flex;gap:8px;margin-bottom:12px}
-.print-actions button{
-  flex:1;padding:12px;font-size:15px;font-weight:600;border:none;
-  border-radius:10px;cursor:pointer;color:#fff;
-}
+.print-actions button{flex:1;padding:12px;font-size:15px;font-weight:600;border:none;border-radius:10px;cursor:pointer;color:#fff}
 .copy-btn{background:#4CAF50}
 .close-print-btn{background:#555}
 .copy-msg{text-align:center;font-size:14px;color:#4CAF50;min-height:20px;margin-bottom:8px}
+
+/* 설정 */
+.settings-btn{
+  position:fixed;top:12px;right:12px;background:none;border:none;
+  color:#555;font-size:22px;cursor:pointer;z-index:50;padding:8px;
+}
+.settings-overlay{
+  display:none;position:fixed;top:0;left:0;right:0;bottom:0;
+  background:rgba(0,0,0,0.9);z-index:300;padding:16px;overflow-y:auto;
+}
+.settings-overlay.show{display:block}
+.set-section{background:#16213e;border-radius:12px;padding:16px;margin:12px 0}
+.set-section h3{font-size:16px;margin-bottom:12px;color:#aaa}
+.set-item{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid #333}
+.set-item:last-child{border:none}
+.set-item input{
+  flex:1;background:#1a1a2e;border:1px solid #444;border-radius:8px;
+  padding:8px;color:#eee;font-size:15px;
+}
+.set-item button{
+  background:#e94560;border:none;color:#fff;padding:6px 12px;
+  border-radius:6px;font-size:13px;cursor:pointer;
+}
+.set-add{
+  width:100%;padding:10px;margin-top:8px;background:none;
+  border:1px dashed #555;border-radius:8px;color:#888;font-size:14px;cursor:pointer;
+}
+.set-close{
+  width:100%;padding:14px;margin-top:16px;background:#333;border:none;
+  border-radius:12px;color:#eee;font-size:16px;font-weight:600;cursor:pointer;
+}
 </style>
 </head>
 <body>
 
+<button class="settings-btn" onclick="openSettings()">&#9881;</button>
+
 <div id="app">
   <h2>기사 관리</h2>
   <div class="work-date" id="workDate"></div>
-
-  <!-- 기사 선택 -->
   <div class="section-label">누구의 기록?</div>
   <div class="worker-row" id="workerRow"></div>
-
-  <!-- 현장별 회전수 -->
   <div id="siteSections"></div>
-
-  <!-- 저장 -->
   <button class="save-btn" id="saveBtn" disabled onclick="saveRecord()">기록 저장</button>
   <div class="save-msg" id="saveMsg"></div>
-
   <div class="divider"></div>
-
-  <!-- 오늘 기록 현황 -->
   <div class="section-label" id="todayLabel"></div>
   <div id="todayRecords"></div>
-
-  <!-- 이전 기록 -->
   <div class="history-toggle" onclick="toggleHistory()">이전 기록 보기 ▼</div>
   <div id="historyArea" style="display:none"></div>
-
-  <!-- 출력하기 -->
-  <div style="display:flex;gap:8px;margin:16px 0">
-    <button class="print-btn" style="flex:1;margin:0" onclick="printWorker('김기사')">김기사 출력</button>
-    <button class="print-btn" style="flex:1;margin:0" onclick="printWorker('이기사')">이기사 출력</button>
-  </div>
+  <div id="printButtons"></div>
 </div>
 
 <!-- 출력 모달 -->
@@ -151,11 +135,26 @@ h2{text-align:center;font-size:18px;color:#aaa;margin-bottom:16px}
   <div class="print-box" id="printBox"></div>
 </div>
 
+<!-- 설정 모달 -->
+<div class="settings-overlay" id="settingsOverlay">
+  <h2 style="margin-bottom:16px">설정</h2>
+  <div class="set-section">
+    <h3>기사 이름</h3>
+    <div id="setWorkers"></div>
+    <button class="set-add" onclick="addWorker()">+ 기사 추가</button>
+  </div>
+  <div class="set-section">
+    <h3>현장 이름</h3>
+    <div id="setSites"></div>
+    <button class="set-add" onclick="addSite()">+ 현장 추가</button>
+  </div>
+  <button class="set-close" onclick="closeSettings()">닫기</button>
+</div>
+
 <div id="expiredScreen" style="display:none">
   <div class="expired">
     <h1>만료됨</h1>
     <p>1달 이상 사용하지 않아 데이터가 삭제되었습니다.</p>
-    <p style="color:#888;margin-top:16px">다시 사용하려면 새로 배포하세요.</p>
   </div>
 </div>
 
@@ -175,35 +174,46 @@ const app = initializeApp({
 });
 const db = getDatabase(app);
 
-// ===== 설정 =====
-const WORKERS = ["김기사", "이기사"];
-const SITES = [
-  { name: "소노벨", color: "#4CAF50" },
-  { name: "쿠팡", color: "#2196F3" }
-];
-const MAX_COUNT = 5; // 0~5 회전
+const MAX_COUNT = 5;
 const EXPIRY_DAYS = 30;
+const COLORS = ["#4CAF50","#2196F3","#FF9800","#9C27B0","#E91E63","#00BCD4","#FF5722","#607D8B"];
+const DEFAULT_WORKERS = ["김기사", "이기사"];
+const DEFAULT_SITES = [{name:"소노벨",color:"#4CAF50"},{name:"쿠팡",color:"#2196F3"}];
 
-// ===== 상태 =====
+let WORKERS = [];
+let SITES = [];
 let selectedWorker = null;
-let selectedCounts = {}; // {siteIdx: count}
+let selectedCounts = {};
 let allRecords = {};
 
-// ===== 출근일 계산 (22시 출근 → 오전이면 전날) =====
-function getWorkDate() {
-  const now = new Date();
-  // 정오(12시) 이전이면 전날로 기록
-  if (now.getHours() < 12) {
-    now.setDate(now.getDate() - 1);
-  }
-  return now;
+// ===== 설정 로드 (Firebase에서) =====
+function loadConfig() {
+  onValue(ref(db, "config"), snap => {
+    const val = snap.val();
+    if (val) {
+      WORKERS = val.workers || DEFAULT_WORKERS;
+      SITES = (val.sites || DEFAULT_SITES).map((s,i) =>
+        typeof s === "string" ? {name:s, color:COLORS[i%COLORS.length]} : s
+      );
+    } else {
+      WORKERS = [...DEFAULT_WORKERS];
+      SITES = [...DEFAULT_SITES];
+      set(ref(db, "config"), {workers: WORKERS, sites: SITES});
+    }
+    renderAll();
+  });
 }
 
+// ===== 출근일 계산 =====
+function getWorkDate() {
+  const now = new Date();
+  if (now.getHours() < 12) now.setDate(now.getDate() - 1);
+  return now;
+}
 function formatDate(d) {
   const days = ["일","월","화","수","목","금","토"];
   return `${d.getMonth()+1}/${d.getDate()} (${days[d.getDay()]})`;
 }
-
 function dateKey(d) {
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
 }
@@ -212,10 +222,8 @@ function dateKey(d) {
 async function checkExpiry() {
   const snap = await get(ref(db, "lastActivity"));
   if (snap.exists()) {
-    const last = snap.val();
-    const diff = Date.now() - last;
-    if (diff > EXPIRY_DAYS * 24 * 60 * 60 * 1000) {
-      // 만료 → 전체 삭제
+    const diff = Date.now() - snap.val();
+    if (diff > EXPIRY_DAYS * 24*60*60*1000) {
       await remove(ref(db));
       document.getElementById("app").style.display = "none";
       document.getElementById("expiredScreen").style.display = "block";
@@ -225,10 +233,18 @@ async function checkExpiry() {
   return true;
 }
 
-// ===== UI 렌더링 =====
+// ===== 렌더링 =====
+function renderAll() {
+  renderWorkDate();
+  renderWorkers();
+  renderSites();
+  renderPrintButtons();
+  updateSaveBtn();
+  renderTodayRecords();
+}
+
 function renderWorkDate() {
-  const wd = getWorkDate();
-  document.getElementById("workDate").textContent = formatDate(wd) + " 기록";
+  document.getElementById("workDate").textContent = formatDate(getWorkDate()) + " 기록";
 }
 
 function renderWorkers() {
@@ -249,13 +265,11 @@ function renderSites() {
   SITES.forEach((site, si) => {
     const section = document.createElement("div");
     section.className = "site-section";
-
     const label = document.createElement("div");
     label.className = "site-name";
     label.style.color = site.color;
     label.textContent = site.name;
     section.appendChild(label);
-
     const row = document.createElement("div");
     row.className = "count-row";
     for (let c = 0; c <= MAX_COUNT; c++) {
@@ -273,71 +287,62 @@ function renderSites() {
   });
 }
 
+function renderPrintButtons() {
+  const container = document.getElementById("printButtons");
+  let html = '<div style="display:flex;gap:8px;margin:16px 0">';
+  WORKERS.forEach(w => {
+    html += `<button class="print-btn" style="flex:1;margin:0" onclick="printWorker('${w}')">${w} 출력</button>`;
+  });
+  html += '</div>';
+  container.innerHTML = html;
+}
+
 function updateSaveBtn() {
   const btn = document.getElementById("saveBtn");
   const hasWorker = selectedWorker !== null;
-  const hasCounts = Object.keys(selectedCounts).length > 0 &&
-                    Object.values(selectedCounts).some(c => c > 0);
+  const hasCounts = Object.keys(selectedCounts).length > 0 && Object.values(selectedCounts).some(c => c > 0);
   btn.disabled = !(hasWorker && hasCounts);
 }
 
 // ===== 저장 =====
 window.saveRecord = async function() {
   if (selectedWorker === null) return;
-
   const wd = getWorkDate();
   const dk = dateKey(wd);
   const worker = WORKERS[selectedWorker];
-
   const data = {};
-  SITES.forEach((site, si) => {
-    if (selectedCounts[si] > 0) {
-      data[site.name] = selectedCounts[si];
-    }
-  });
-
+  SITES.forEach((site, si) => { if (selectedCounts[si] > 0) data[site.name] = selectedCounts[si]; });
   if (Object.keys(data).length === 0) return;
-
-  // 기존 기록에 덮어쓰기 (같은 날 같은 기사)
   await set(ref(db, `records/${dk}/${worker}`), data);
   await set(ref(db, "lastActivity"), Date.now());
-
-  // 피드백
   const msg = document.getElementById("saveMsg");
   const parts = Object.entries(data).map(([k,v]) => `${k} x${v}`).join(", ");
   msg.textContent = `${formatDate(wd)} ${worker}: ${parts} 저장!`;
   msg.style.color = "#4CAF50";
   setTimeout(() => { msg.textContent = ""; }, 3000);
-
-  // 초기화
   selectedCounts = {};
   renderSites();
   updateSaveBtn();
 };
 
-// ===== 오늘 기록 표시 (실시간) =====
+// ===== 오늘 기록 =====
 function renderTodayRecords() {
   const wd = getWorkDate();
   const dk = dateKey(wd);
   const dayRec = allRecords[dk] || {};
-
   document.getElementById("todayLabel").textContent = formatDate(wd) + " 기록 현황";
-
   const container = document.getElementById("todayRecords");
   container.innerHTML = "";
-
   if (Object.keys(dayRec).length === 0) {
     container.innerHTML = '<div class="record-card"><div class="record-detail">아직 기록 없음</div></div>';
     return;
   }
-
   for (const [worker, sites] of Object.entries(dayRec)) {
     const card = document.createElement("div");
     card.className = "record-card";
     const parts = Object.entries(sites).map(([s,c]) => {
       const site = SITES.find(x => x.name === s);
-      const color = site ? site.color : "#eee";
-      return `<span style="color:${color}">${s} x${c}</span>`;
+      return `<span style="color:${site ? site.color : '#eee'}">${s} x${c}</span>`;
     }).join("");
     const total = Object.values(sites).reduce((a,b) => a+b, 0);
     card.innerHTML = `<div class="record-header">${worker} (${total}회)</div><div class="record-detail">${parts}</div>`;
@@ -348,48 +353,33 @@ function renderTodayRecords() {
 // ===== 이전 기록 =====
 window.toggleHistory = function() {
   const area = document.getElementById("historyArea");
-  if (area.style.display === "none") {
-    area.style.display = "block";
-    renderHistory();
-  } else {
-    area.style.display = "none";
-  }
+  if (area.style.display === "none") { area.style.display = "block"; renderHistory(); }
+  else { area.style.display = "none"; }
 };
 
 function renderHistory() {
   const area = document.getElementById("historyArea");
   const dates = Object.keys(allRecords).sort().reverse().slice(0, 30);
-
-  if (dates.length === 0) {
-    area.innerHTML = '<p style="text-align:center;color:#888;padding:16px">기록 없음</p>';
-    return;
-  }
-
+  if (dates.length === 0) { area.innerHTML = '<p style="text-align:center;color:#888;padding:16px">기록 없음</p>'; return; }
   let html = '<table class="history-table"><thead><tr><th>날짜</th>';
   WORKERS.forEach(w => html += `<th>${w}</th>`);
   html += '</tr></thead><tbody>';
-
   for (const dk of dates) {
     const dayRec = allRecords[dk];
     const [y,m,d] = dk.split("-");
     const dt = new Date(+y, +m-1, +d);
     const days = ["일","월","화","수","목","금","토"];
-    const label = `${+m}/${+d}(${days[dt.getDay()]})`;
-
-    html += `<tr><td>${label}</td>`;
+    html += `<tr><td>${+m}/${+d}(${days[dt.getDay()]})</td>`;
     WORKERS.forEach(w => {
       const wr = dayRec[w] || {};
       const parts = Object.entries(wr).map(([s,c]) => `${s}${c}`).join(" ");
       if (parts) {
         html += `<td>${parts} <span style="color:#e94560;cursor:pointer;font-size:11px" onclick="deleteRecord('${dk}','${w}')">[x]</span></td>`;
-      } else {
-        html += `<td>-</td>`;
-      }
+      } else { html += `<td>-</td>`; }
     });
     html += '</tr>';
   }
   html += '</tbody></table>';
-
   // 월간 합계
   const wd = getWorkDate();
   const curMonth = `${wd.getFullYear()}-${String(wd.getMonth()+1).padStart(2,"0")}`;
@@ -400,60 +390,47 @@ function renderHistory() {
     for (const dk of monthDates) {
       for (const [w, sites] of Object.entries(allRecords[dk] || {})) {
         if (!totals[w]) totals[w] = {};
-        for (const [s, c] of Object.entries(sites)) {
-          totals[w][s] = (totals[w][s] || 0) + c;
-        }
+        for (const [s, c] of Object.entries(sites)) { totals[w][s] = (totals[w][s] || 0) + c; }
       }
     }
-
     html += `<h3 style="margin-top:20px;font-size:15px;color:#aaa">${+curMonth.split("-")[1]}월 합계</h3>`;
     html += '<table class="history-table"><thead><tr><th></th>';
     SITES.forEach(s => html += `<th style="color:${s.color}">${s.name}</th>`);
     html += '<th>합계</th></tr></thead><tbody>';
     WORKERS.forEach(w => {
-      let rowTotal = 0;
+      let rt = 0;
       html += `<tr><td style="font-weight:700">${w}</td>`;
-      SITES.forEach(s => {
-        const v = totals[w]?.[s.name] || 0;
-        rowTotal += v;
-        html += `<td>${v}</td>`;
-      });
-      html += `<td style="font-weight:700;color:#e94560">${rowTotal}</td></tr>`;
+      SITES.forEach(s => { const v = totals[w]?.[s.name] || 0; rt += v; html += `<td>${v}</td>`; });
+      html += `<td style="font-weight:700;color:#e94560">${rt}</td></tr>`;
     });
     html += '</tbody></table>';
   }
-
   area.innerHTML = html;
 }
 
-// ===== 기록 삭제 =====
+// ===== 삭제 =====
 window.deleteRecord = async function(dk, worker) {
   const [y,m,d] = dk.split("-");
-  const dayNames = ["일","월","화","수","목","금","토"];
+  const days = ["일","월","화","수","목","금","토"];
   const dt = new Date(+y, +m-1, +d);
-  if (confirm(`${+m}/${+d}(${dayNames[dt.getDay()]}) ${worker} 기록 삭제?`)) {
+  if (confirm(`${+m}/${+d}(${days[dt.getDay()]}) ${worker} 삭제?`)) {
     await remove(ref(db, `records/${dk}/${worker}`));
   }
 };
 
-// ===== 출력하기 (기사별 개별 출력) =====
+// ===== 출력 =====
 window.printWorker = function(worker) {
   const dates = Object.keys(allRecords).sort();
   if (dates.length === 0) { alert("기록이 없습니다"); return; }
-
   const dayNames = ["일","월","화","수","목","금","토"];
   let text = `[ ${worker} ]\n\n`;
   let workerTotal = 0;
   const siteTotals = {};
-
   for (const dk of dates) {
     const wr = allRecords[dk]?.[worker];
     if (!wr) continue;
-
     const [y,m,d] = dk.split("-");
     const dt = new Date(+y, +m-1, +d);
-    const dayName = dayNames[dt.getDay()];
-
     const parts = [];
     let dayTotal = 0;
     for (const [site, cnt] of Object.entries(wr)) {
@@ -462,63 +439,122 @@ window.printWorker = function(worker) {
       siteTotals[site] = (siteTotals[site] || 0) + cnt;
     }
     workerTotal += dayTotal;
-
-    text += `${+m}/${+d} ${dayName}  ${parts.join(" / ")}  +${dayTotal}\n`;
+    text += `${+m}/${+d} ${dayNames[dt.getDay()]}  ${parts.join(" / ")}  +${dayTotal}\n`;
   }
-
-  text += `\n──────────\n`;
-  for (const [site, cnt] of Object.entries(siteTotals)) {
-    text += `${site}: ${cnt}\n`;
-  }
+  text += `\n----------\n`;
+  for (const [site, cnt] of Object.entries(siteTotals)) text += `${site}: ${cnt}\n`;
   text += `합계: ${workerTotal}회전`;
-
   document.getElementById("printBox").textContent = text;
   document.getElementById("printOverlay").classList.add("show");
   document.getElementById("copyMsg").textContent = "";
 };
 
 window.copyPrint = async function() {
+  const text = document.getElementById("printBox").textContent;
   try {
-    await navigator.clipboard.writeText(printText);
-    document.getElementById("copyMsg").textContent = "복사 완료! 카톡/메모에 붙여넣기 하세요";
+    await navigator.clipboard.writeText(text);
+    document.getElementById("copyMsg").textContent = "복사 완료!";
   } catch(e) {
-    // 클립보드 실패 시 선택 방식
     const box = document.getElementById("printBox");
     const range = document.createRange();
     range.selectNodeContents(box);
     window.getSelection().removeAllRanges();
     window.getSelection().addRange(range);
-    document.getElementById("copyMsg").textContent = "텍스트가 선택됨 - 복사해주세요";
+    document.getElementById("copyMsg").textContent = "선택됨 - 복사해주세요";
   }
 };
+window.closePrint = function() { document.getElementById("printOverlay").classList.remove("show"); };
 
-window.closePrint = function() {
-  document.getElementById("printOverlay").classList.remove("show");
+// ===== 설정 화면 =====
+window.openSettings = function() {
+  renderSettingsWorkers();
+  renderSettingsSites();
+  document.getElementById("settingsOverlay").classList.add("show");
+};
+window.closeSettings = function() {
+  document.getElementById("settingsOverlay").classList.remove("show");
 };
 
-// ===== Firebase 실시간 리스너 =====
+function renderSettingsWorkers() {
+  const container = document.getElementById("setWorkers");
+  container.innerHTML = "";
+  WORKERS.forEach((w, i) => {
+    const div = document.createElement("div");
+    div.className = "set-item";
+    div.innerHTML = `<input value="${w}" onchange="renameWorker(${i}, this.value)">
+      <button onclick="removeWorker(${i})">삭제</button>`;
+    container.appendChild(div);
+  });
+}
+
+function renderSettingsSites() {
+  const container = document.getElementById("setSites");
+  container.innerHTML = "";
+  SITES.forEach((s, i) => {
+    const div = document.createElement("div");
+    div.className = "set-item";
+    div.innerHTML = `<input value="${s.name}" onchange="renameSite(${i}, this.value)">
+      <button onclick="removeSite(${i})">삭제</button>`;
+    container.appendChild(div);
+  });
+}
+
+window.renameWorker = function(i, name) {
+  if (!name.trim()) return;
+  WORKERS[i] = name.trim();
+  set(ref(db, "config/workers"), WORKERS);
+};
+window.removeWorker = function(i) {
+  if (WORKERS.length <= 1) { alert("최소 1명 필요"); return; }
+  if (confirm(`"${WORKERS[i]}" 삭제?`)) {
+    WORKERS.splice(i, 1);
+    set(ref(db, "config/workers"), WORKERS);
+    renderSettingsWorkers();
+  }
+};
+window.addWorker = function() {
+  const name = prompt("기사 이름:");
+  if (!name || !name.trim()) return;
+  WORKERS.push(name.trim());
+  set(ref(db, "config/workers"), WORKERS);
+  renderSettingsWorkers();
+};
+
+window.renameSite = function(i, name) {
+  if (!name.trim()) return;
+  SITES[i].name = name.trim();
+  set(ref(db, "config/sites"), SITES);
+};
+window.removeSite = function(i) {
+  if (SITES.length <= 1) { alert("최소 1개 필요"); return; }
+  if (confirm(`"${SITES[i].name}" 삭제?`)) {
+    SITES.splice(i, 1);
+    set(ref(db, "config/sites"), SITES);
+    renderSettingsSites();
+  }
+};
+window.addSite = function() {
+  const name = prompt("현장 이름:");
+  if (!name || !name.trim()) return;
+  SITES.push({name: name.trim(), color: COLORS[SITES.length % COLORS.length]});
+  set(ref(db, "config/sites"), SITES);
+  renderSettingsSites();
+};
+
+// ===== Firebase 리스너 =====
 onValue(ref(db, "records"), snap => {
   allRecords = snap.val() || {};
   renderTodayRecords();
-  if (document.getElementById("historyArea").style.display !== "none") {
-    renderHistory();
-  }
+  if (document.getElementById("historyArea").style.display !== "none") renderHistory();
 });
 
 // ===== 초기화 =====
 async function init() {
   const ok = await checkExpiry();
   if (!ok) return;
-
-  // 활동 기록
   set(ref(db, "lastActivity"), Date.now());
-
-  renderWorkDate();
-  renderWorkers();
-  renderSites();
-  updateSaveBtn();
+  loadConfig();
 }
-
 init();
 </script>
 </body>
