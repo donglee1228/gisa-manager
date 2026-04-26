@@ -900,11 +900,11 @@ window.switchScreen = function(index) {
 
 // ===== 알람 로직 (최대 5개 + 소리 선택) =====
 const ALARM_SOUNDS = [
-  { name: "기본 알람 (디지털)", url: "https://cdn.pixabay.com/audio/2022/03/10/audio_f5f62936a2.mp3" },
-  { name: "클래식 벨", url: "https://cdn.pixabay.com/audio/2021/08/09/audio_650b284988.mp3" },
-  { name: "신나는 댄스 1", url: "https://cdn.pixabay.com/audio/2022/03/10/audio_c8c8a73467.mp3" },
-  { name: "신나는 댄스 2", url: "https://cdn.pixabay.com/audio/2022/01/21/audio_31790c8702.mp3" },
-  { name: "감성 발라드/피아노", url: "https://cdn.pixabay.com/audio/2021/11/25/audio_91b325ef02.mp3" }
+  { name: "기본 알람 (태엽 종소리)", url: "https://www.orangefreesounds.com/wp-content/uploads/2014/08/Alarm-clock-sound-ringing-ringtone.mp3" },
+  { name: "긴급 알람 (핸드벨)", url: "https://orangefreesounds.com/wp-content/uploads/2021/04/Urgent-hand-bell-ringing-sound-effect.mp3" },
+  { name: "트렌디 댄스 1 (EDM)", url: "https://www.chosic.com/wp-content/uploads/2022/05/roa-music-summer-madness(chosic.com).mp3" },
+  { name: "트렌디 댄스 2 (House)", url: "https://www.chosic.com/wp-content/uploads/2025/01/Spiring-Want-you-chosic.com_.mp3" },
+  { name: "감성 발라드 (피아노)", url: "https://www.chosic.com/wp-content/uploads/2023/04/Lights(chosic.com).mp3" }
 ];
 
 let alarms = JSON.parse(localStorage.getItem("alarms")) || [
