@@ -291,9 +291,7 @@ h2{text-align:center;font-size:18px;color:#aaa;margin-bottom:16px}
   </div>
 
   <!-- 알람 음악 요소 -->
-  <audio id="alarmAudio" loop>
-    <source src="https://cdn.pixabay.com/audio/2022/03/10/audio_c8c8a73467.mp3" type="audio/mpeg">
-  </audio>
+  <audio id="alarmAudio" loop></audio>
 
   <!-- 하단 네비게이션 -->
   <div class="bottom-nav">
@@ -900,9 +898,19 @@ window.switchScreen = function(index) {
   }
 };
 
-// ===== 알람 로직 (최대 5개) =====
+// ===== 알람 로직 (최대 5개 + 소리 선택) =====
+const ALARM_SOUNDS = [
+  { name: "기본 알람 (디지털)", url: "https://cdn.pixabay.com/audio/2022/03/10/audio_f5f62936a2.mp3" },
+  { name: "클래식 벨", url: "https://cdn.pixabay.com/audio/2021/08/09/audio_650b284988.mp3" },
+  { name: "신나는 댄스 1", url: "https://cdn.pixabay.com/audio/2022/03/10/audio_c8c8a73467.mp3" },
+  { name: "신나는 댄스 2", url: "https://cdn.pixabay.com/audio/2022/01/21/audio_31790c8702.mp3" },
+  { name: "감성 발라드/피아노", url: "https://cdn.pixabay.com/audio/2021/11/25/audio_91b325ef02.mp3" }
+];
+
 let alarms = JSON.parse(localStorage.getItem("alarms")) || [
-  {time: "", on: false}, {time: "", on: false}, {time: "", on: false}, {time: "", on: false}, {time: "", on: false}
+  {time: "", on: false, sound: 0}, {time: "", on: false, sound: 0}, 
+  {time: "", on: false, sound: 0}, {time: "", on: false, sound: 0}, 
+  {time: "", on: false, sound: 0}
 ];
 let alarmTimer = null;
 
@@ -920,14 +928,25 @@ function renderAlarmList() {
     card.className = "alarm-card";
     card.style.padding = "15px";
     card.style.marginBottom = "12px";
+    card.style.textAlign = "left";
     
+    let soundOptions = ALARM_SOUNDS.map((s, si) => 
+      `<option value="${si}" ${alarm.sound == si ? 'selected' : ''}>${s.name}</option>`
+    ).join("");
+
     card.innerHTML = `
-      <div style="display:flex; justify-content:space-between; align-items:center;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
         <span class="section-label">알람 ${i+1}</span>
         <input type="time" id="alarmTime${i}" class="edit-date" style="width:120px; font-size:18px;" 
                value="${alarm.time}" onchange="updateAlarmTime(${i}, this.value)">
-        <button class="alarm-btn ${alarm.on ? 'off' : ''}" style="width:80px; padding:10px; margin:0; font-size:14px;"
+        <button class="alarm-btn ${alarm.on ? 'off' : ''}" style="width:60px; padding:10px; margin:0; font-size:14px;"
                 onclick="toggleAlarmSlot(${i})">${alarm.on ? '끄기' : '켜기'}</button>
+      </div>
+      <div style="display:flex; gap:8px;">
+        <select onchange="updateAlarmSound(${i}, this.value)" class="edit-date" style="flex:1; padding:8px; font-size:13px;">
+          ${soundOptions}
+        </select>
+        <button onclick="previewSound(${i})" style="padding:8px 12px; background:#0f3460; border:1px solid #2196F3; border-radius:8px; color:#2196F3; font-size:12px;">🎧 들어보기</button>
       </div>
     `;
     container.appendChild(card);
@@ -937,6 +956,20 @@ function renderAlarmList() {
 window.updateAlarmTime = function(index, value) {
   alarms[index].time = value;
   saveAlarms();
+};
+
+window.updateAlarmSound = function(index, value) {
+  alarms[index].sound = parseInt(value);
+  saveAlarms();
+};
+
+window.previewSound = function(index) {
+  const audio = document.getElementById("alarmAudio");
+  const soundIdx = alarms[index].sound;
+  audio.src = ALARM_SOUNDS[soundIdx].url;
+  audio.currentTime = 0;
+  audio.play();
+  setTimeout(() => { if(!document.getElementById("alarmTriggerOverlay").classList.contains("show")) audio.pause(); }, 5000);
 };
 
 window.toggleAlarmSlot = function(index) {
@@ -964,8 +997,8 @@ function startAlarmCheck() {
     
     const triggered = alarms.find(a => a.on && a.time === currentTime);
     if (triggered) {
-      triggerAlarm(triggered.time);
-      // 알람 울린 후 해당 슬롯만 끔 (원치 않으면 주석 처리)
+      triggerAlarm(triggered.time, triggered.sound);
+      // 알람 울린 후 해당 슬롯만 끔
       const idx = alarms.indexOf(triggered);
       alarms[idx].on = false;
       saveAlarms();
@@ -978,8 +1011,9 @@ function stopAlarmCheck() {
   if (alarmTimer) clearInterval(alarmTimer);
 }
 
-function triggerAlarm(time) {
+function triggerAlarm(time, soundIdx) {
   const audio = document.getElementById("alarmAudio");
+  audio.src = ALARM_SOUNDS[soundIdx].url;
   audio.currentTime = 0;
   audio.play().catch(e => console.log("자동 재생 제한:", e));
 
