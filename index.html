@@ -899,6 +899,7 @@ window.switchScreen = function(index) {
 };
 
 // ===== 알람 로직 (최대 5개 + 소리 선택) =====
+let autoStopTimer = null; // 10분 자동 종료 타이머
 const ALARM_SOUNDS = [
   { name: "기본 알람 (디지털)", url: "https://upload.wikimedia.org/wikipedia/commons/f/f4/Alarm_Clock_%28Directory.Audio%29.mp3" },
   { name: "클래식 벨 (기계식)", url: "https://upload.wikimedia.org/wikipedia/commons/6/69/Mechanical_Clock_Ring_%28Directory.Audio%29.mp3" },
@@ -1029,12 +1030,25 @@ function triggerAlarm(time, soundIdx) {
 
   document.getElementById("alarmTimeText").textContent = `설정 시간: ${time}`;
   document.getElementById("alarmTriggerOverlay").classList.add("show");
+
+  // ★ 10분 후 자동 종료 기능 추가 (층간소음 방지)
+  if (autoStopTimer) clearTimeout(autoStopTimer);
+  autoStopTimer = setTimeout(() => {
+    console.log("10분 경과: 알람을 자동으로 종료합니다.");
+    stopAlarmMusic();
+  }, 600000); // 10분 = 600,000ms
 }
 
 window.stopAlarmMusic = function() {
   const audio = document.getElementById("alarmAudio");
   audio.pause();
   document.getElementById("alarmTriggerOverlay").classList.remove("show");
+  
+  // 수동으로 껐을 경우 자동 종료 타이머 해제
+  if (autoStopTimer) {
+    clearTimeout(autoStopTimer);
+    autoStopTimer = null;
+  }
 };
 
 // ===== 초기화 =====
