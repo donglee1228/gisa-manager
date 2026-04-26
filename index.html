@@ -900,11 +900,11 @@ window.switchScreen = function(index) {
 
 // ===== 알람 로직 (최대 5개 + 소리 선택) =====
 const ALARM_SOUNDS = [
-  { name: "기본 알람 (에이전트)", url: "https://upload.wikimedia.org/wikipedia/commons/3/34/Sound_Effect_-_Emergency_Alarm.mp3" },
-  { name: "클래식 시계", url: "https://upload.wikimedia.org/wikipedia/commons/2/23/Clock_Alarm.mp3" },
-  { name: "전자 댄스 1", url: "https://upload.wikimedia.org/wikipedia/commons/d/da/Ambient-electronic-loop-104-bpm.mp3" },
-  { name: "전자 댄스 2", url: "https://upload.wikimedia.org/wikipedia/commons/0/0a/Electronic_Music_-_Loop_3.mp3" },
-  { name: "잔잔한 피아노", url: "https://upload.wikimedia.org/wikipedia/commons/2/2a/Piano_melody_loop_85_bpm.mp3" }
+  { name: "기본 알람 (디지털)", url: "https://upload.wikimedia.org/wikipedia/commons/f/f4/Alarm_Clock_%28Directory.Audio%29.mp3" },
+  { name: "클래식 벨 (기계식)", url: "https://upload.wikimedia.org/wikipedia/commons/6/69/Mechanical_Clock_Ring_%28Directory.Audio%29.mp3" },
+  { name: "신나는 댄스 1 (에너지)", url: "https://upload.wikimedia.org/wikipedia/commons/f/f4/Sample_dance_1.mp3" },
+  { name: "신나는 댄스 2 (일렉트로)", url: "https://upload.wikimedia.org/wikipedia/commons/4/46/Electroman_Adventures_V3_by_Waterflame.mp3" },
+  { name: "감성 발라드 (피아노)", url: "https://upload.wikimedia.org/wikipedia/commons/f/f9/Touching_Moments_Two_-_Higher_%28ISRC_USUAN1100037%29.mp3" }
 ];
 
 let alarms = JSON.parse(localStorage.getItem("alarms")) || [
