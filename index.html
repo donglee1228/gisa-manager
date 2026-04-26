@@ -122,41 +122,176 @@ h2{text-align:center;font-size:18px;color:#aaa;margin-bottom:16px}
   width:100%;padding:14px;margin-top:16px;background:#333;border:none;
   border-radius:12px;color:#eee;font-size:16px;font-weight:600;cursor:pointer;
 }
+  /* 화면 전환 및 하단 바 스타일 */
+  #app-wrapper {
+    overflow: hidden;
+    position: relative;
+    width: 100%;
+    min-height: 100vh;
+    padding-bottom: 70px; /* 하단 바 공간 */
+  }
+  .screen-container {
+    display: flex;
+    width: 200%;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .screen {
+    width: 50%;
+    min-height: 100vh;
+    padding: 16px;
+    box-sizing: border-box;
+  }
+  .bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 60px;
+    background: #16213e;
+    border-top: 1px solid #333;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    z-index: 1000;
+  }
+  .nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    color: #888;
+    font-size: 11px;
+    cursor: pointer;
+    transition: color 0.2s;
+  }
+  .nav-item.active {
+    color: #e94560;
+  }
+  .nav-icon {
+    font-size: 20px;
+    margin-bottom: 2px;
+  }
+
+  /* 알람 화면 스타일 */
+  .alarm-card {
+    background: #16213e;
+    border-radius: 15px;
+    padding: 20px;
+    margin-bottom: 20px;
+    text-align: center;
+    border: 1px solid #333;
+  }
+  .alarm-time-input {
+    width: 100%;
+    background: #1a1a2e;
+    border: 2px solid #e94560;
+    border-radius: 12px;
+    color: #fff;
+    font-size: 32px;
+    font-weight: 800;
+    padding: 15px;
+    text-align: center;
+    margin: 15px 0;
+    color-scheme: dark;
+  }
+  .alarm-status {
+    font-size: 15px;
+    color: #aaa;
+    margin-top: 10px;
+  }
+  .alarm-btn {
+    width: 100%;
+    padding: 16px;
+    background: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 18px;
+    font-weight: 700;
+    cursor: pointer;
+    margin-top: 10px;
+  }
+  .alarm-btn.off { background: #555; }
+  .alarm-list-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #1a1a2e;
+    padding: 15px;
+    border-radius: 10px;
+    margin-top: 10px;
+  }
 </style>
 </head>
 <body>
 
-<button class="settings-btn" onclick="openSettings()">&#9881;</button>
+<div id="app-wrapper">
+  <div class="screen-container" id="screenContainer">
+    <!-- 메인 화면 (기존 기사 관리) -->
+    <div id="main-screen" class="screen">
+      <div id="app">
+        <button class="settings-btn" onclick="openSettings()">&#9881;</button>
+        <h2>기사 관리</h2>
+        <div class="work-date" id="workDate"></div>
+        <div class="section-label">누구의 기록?</div>
+        <div class="worker-row" id="workerRow"></div>
+        <div id="siteSections"></div>
+        <button class="save-btn" id="saveBtn" disabled onclick="saveRecord()">기록 저장</button>
+        <div class="save-msg" id="saveMsg"></div>
+        <div class="divider"></div>
+        <div class="section-label" id="todayLabel"></div>
+        <div id="todayRecords"></div>
+        <div class="history-toggle" onclick="toggleHistory()">이전 기록 보기 ▼</div>
+        <div id="historyArea" style="display:none"></div>
+        <div id="printButtons"></div>
 
-<div id="app">
-  <h2>기사 관리</h2>
-  <div class="work-date" id="workDate"></div>
-  <div class="section-label">누구의 기록?</div>
-  <div class="worker-row" id="workerRow"></div>
-  <div id="siteSections"></div>
-  <button class="save-btn" id="saveBtn" disabled onclick="saveRecord()">기록 저장</button>
-  <div class="save-msg" id="saveMsg"></div>
-  <div class="divider"></div>
-  <div class="section-label" id="todayLabel"></div>
-  <div id="todayRecords"></div>
-  <div class="history-toggle" onclick="toggleHistory()">이전 기록 보기 ▼</div>
-  <div id="historyArea" style="display:none"></div>
-  <div id="printButtons"></div>
+        <div class="divider"></div>
+        <div class="history-toggle" onclick="toggleEdit()">수정하기 ▼</div>
+        <div id="editArea" style="display:none">
+          <div class="edit-box">
+            <div class="section-label">날짜 선택</div>
+            <input type="date" id="editDate" class="edit-date" onchange="loadEditDate()">
+            <div class="section-label" style="margin-top:12px">기사</div>
+            <div class="worker-row" id="editWorkerRow"></div>
+            <div id="editSiteSections"></div>
+            <div id="editExisting"></div>
+            <button class="save-btn" id="editSaveBtn" disabled onclick="saveEdit()">수정 저장</button>
+            <button class="edit-delete-btn" id="editDeleteBtn" style="display:none" onclick="deleteEdit()">이 날 기록 삭제</button>
+            <div class="save-msg" id="editMsg"></div>
+          </div>
+        </div>
+      </div>
+    </div>
 
-  <!-- 수정하기 -->
-  <div class="divider"></div>
-  <div class="history-toggle" onclick="toggleEdit()">수정하기 ▼</div>
-  <div id="editArea" style="display:none">
-    <div class="edit-box">
-      <div class="section-label">날짜 선택</div>
-      <input type="date" id="editDate" class="edit-date" onchange="loadEditDate()">
-      <div class="section-label" style="margin-top:12px">기사</div>
-      <div class="worker-row" id="editWorkerRow"></div>
-      <div id="editSiteSections"></div>
-      <div id="editExisting"></div>
-      <button class="save-btn" id="editSaveBtn" disabled onclick="saveEdit()">수정 저장</button>
-      <button class="edit-delete-btn" id="editDeleteBtn" style="display:none" onclick="deleteEdit()">이 날 기록 삭제</button>
-      <div class="save-msg" id="editMsg"></div>
+    <!-- 알람 화면 -->
+    <div id="alarm-screen" class="screen">
+      <h2>알람 설정</h2>
+      <div class="alarm-card">
+        <div class="section-label">알람 시간</div>
+        <input type="time" id="alarmTime" class="alarm-time-input">
+        <div id="alarmStatus" class="alarm-status">알람이 설정되지 않았습니다.</div>
+        <button id="alarmToggleBtn" class="alarm-btn" onclick="toggleAlarm()">알람 설정하기</button>
+      </div>
+      
+      <div class="section-label">작동 안내</div>
+      <div class="record-card">
+        <div class="record-detail">
+          • 지정된 시간이 되면 알림음과 진동이 울립니다.<br>
+          • 브라우저 창이 열려 있어야 작동합니다.<br>
+          • 소리가 들리지 않으면 휴대폰 무음 모드를 확인해 주세요.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 하단 네비게이션 -->
+  <div class="bottom-nav">
+    <div class="nav-item active" id="navMain" onclick="switchScreen(0)">
+      <div class="nav-icon">📋</div>
+      <div>기록관리</div>
+    </div>
+    <div class="nav-item" id="navAlarm" onclick="switchScreen(1)">
+      <div class="nav-icon">⏰</div>
+      <div>알람설정</div>
     </div>
   </div>
 </div>
@@ -736,12 +871,130 @@ onValue(ref(db, "records"), snap => {
   if (document.getElementById("historyArea").style.display !== "none") renderHistory();
 });
 
+// ===== 화면 전환 로직 =====
+window.switchScreen = function(index) {
+  const container = document.getElementById("screenContainer");
+  const navMain = document.getElementById("navMain");
+  const navAlarm = document.getElementById("navAlarm");
+  
+  container.style.transform = `translateX(-${index * 50}%)`;
+  
+  if (index === 0) {
+    navMain.classList.add("active");
+    navAlarm.classList.remove("active");
+  } else {
+    navMain.classList.remove("active");
+    navAlarm.classList.add("active");
+  }
+};
+
+// ===== 알람 로직 =====
+let alarmTime = localStorage.getItem("alarmTime") || "";
+let isAlarmOn = localStorage.getItem("isAlarmOn") === "true";
+let alarmTimer = null;
+
+function initAlarm() {
+  const timeInput = document.getElementById("alarmTime");
+  const status = document.getElementById("alarmStatus");
+  const btn = document.getElementById("alarmToggleBtn");
+  
+  if (alarmTime) timeInput.value = alarmTime;
+  updateAlarmUI();
+  
+  if (isAlarmOn) startAlarmCheck();
+}
+
+function updateAlarmUI() {
+  const status = document.getElementById("alarmStatus");
+  const btn = document.getElementById("alarmToggleBtn");
+  
+  if (isAlarmOn) {
+    status.textContent = `${alarmTime}에 알람이 설정되어 있습니다.`;
+    btn.textContent = "알람 끄기";
+    btn.classList.add("off");
+  } else {
+    status.textContent = "알람이 설정되지 않았습니다.";
+    btn.textContent = "알람 설정하기";
+    btn.classList.remove("off");
+  }
+}
+
+window.toggleAlarm = function() {
+  const timeInput = document.getElementById("alarmTime");
+  if (!timeInput.value) {
+    alert("알람 시간을 선택해 주세요.");
+    return;
+  }
+  
+  isAlarmOn = !isAlarmOn;
+  alarmTime = timeInput.value;
+  
+  localStorage.setItem("alarmTime", alarmTime);
+  localStorage.setItem("isAlarmOn", isAlarmOn);
+  
+  updateAlarmUI();
+  
+  if (isAlarmOn) {
+    startAlarmCheck();
+    alert(`${alarmTime}에 알람이 설정되었습니다.`);
+  } else {
+    stopAlarmCheck();
+  }
+};
+
+function startAlarmCheck() {
+  if (alarmTimer) clearInterval(alarmTimer);
+  alarmTimer = setInterval(() => {
+    const now = new Date();
+    const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+    
+    if (currentTime === alarmTime) {
+      triggerAlarm();
+    }
+  }, 30000); // 30초마다 체크
+}
+
+function stopAlarmCheck() {
+  if (alarmTimer) clearInterval(alarmTimer);
+}
+
+function triggerAlarm() {
+  // 알람 소리 (간단한 비프음 시뮬레이션 또는 오디오 파일)
+  const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  const oscillator = audioCtx.createOscillator();
+  const gainNode = audioCtx.createGain();
+
+  oscillator.connect(gainNode);
+  gainNode.connect(audioCtx.destination);
+  
+  oscillator.type = 'sine';
+  oscillator.frequency.setValueAtTime(440, audioCtx.currentTime); // A4 note
+  gainNode.gain.setValueAtTime(0.5, audioCtx.currentTime);
+  
+  oscillator.start();
+  oscillator.stop(audioCtx.currentTime + 2); // 2초간 소리
+
+  // 진동 (지원되는 경우)
+  if (navigator.vibrate) {
+    navigator.vibrate([500, 200, 500, 200, 500]);
+  }
+
+  alert(`⏰ 알람 시간입니다! (${alarmTime})`);
+  
+  // 알람 울린 후 자동 해제 (원할 경우 유지 가능)
+  isAlarmOn = false;
+  localStorage.setItem("isAlarmOn", isAlarmOn);
+  updateAlarmUI();
+  stopAlarmCheck();
+}
+
 // ===== 초기화 =====
 async function init() {
   const ok = await checkExpiry();
   if (!ok) return;
   set(ref(db, "lastActivity"), Date.now());
   loadConfig();
+  initAlarm(); // 알람 초기화 추가
 }
 init();
 </script>
