@@ -264,24 +264,36 @@ h2{text-align:center;font-size:18px;color:#aaa;margin-bottom:16px}
 
     <!-- 알람 화면 -->
     <div id="alarm-screen" class="screen">
-      <h2>알람 설정</h2>
-      <div class="alarm-card">
-        <div class="section-label">알람 시간</div>
-        <input type="time" id="alarmTime" class="alarm-time-input">
-        <div id="alarmStatus" class="alarm-status">알람이 설정되지 않았습니다.</div>
-        <button id="alarmToggleBtn" class="alarm-btn" onclick="toggleAlarm()">알람 설정하기</button>
+      <h2>알람 설정 (최대 5개)</h2>
+      <div id="alarmListContainer">
+        <!-- 알람 슬롯 5개 생성 -->
       </div>
       
-      <div class="section-label">작동 안내</div>
+      <div class="section-label" style="margin-top:20px">작동 안내</div>
       <div class="record-card">
         <div class="record-detail">
-          • 지정된 시간이 되면 알림음과 진동이 울립니다.<br>
+          • 지정된 시간이 되면 <b>신나는 댄스 음악</b>이 울립니다.<br>
           • 브라우저 창이 열려 있어야 작동합니다.<br>
           • 소리가 들리지 않으면 휴대폰 무음 모드를 확인해 주세요.
         </div>
       </div>
     </div>
   </div>
+
+  <!-- 알람 울림 모달 (음악 정지용) -->
+  <div class="print-overlay" id="alarmTriggerOverlay">
+    <div style="text-align:center; padding-top:100px;">
+      <div style="font-size:80px; margin-bottom:20px;">⏰</div>
+      <h1 style="color:#e94560; margin-bottom:10px;">알람 울림!</h1>
+      <p id="alarmTimeText" style="font-size:24px; margin-bottom:30px;"></p>
+      <button class="save-btn" onclick="stopAlarmMusic()" style="background:#e94560; width:80%;">알람 끄기 (음악 정지)</button>
+    </div>
+  </div>
+
+  <!-- 알람 음악 요소 -->
+  <audio id="alarmAudio" loop>
+    <source src="https://cdn.pixabay.com/audio/2022/03/10/audio_c8c8a73467.mp3" type="audio/mpeg">
+  </audio>
 
   <!-- 하단 네비게이션 -->
   <div class="bottom-nav">
@@ -888,59 +900,61 @@ window.switchScreen = function(index) {
   }
 };
 
-// ===== 알람 로직 =====
-let alarmTime = localStorage.getItem("alarmTime") || "";
-let isAlarmOn = localStorage.getItem("isAlarmOn") === "true";
+// ===== 알람 로직 (최대 5개) =====
+let alarms = JSON.parse(localStorage.getItem("alarms")) || [
+  {time: "", on: false}, {time: "", on: false}, {time: "", on: false}, {time: "", on: false}, {time: "", on: false}
+];
 let alarmTimer = null;
 
 function initAlarm() {
-  const timeInput = document.getElementById("alarmTime");
-  const status = document.getElementById("alarmStatus");
-  const btn = document.getElementById("alarmToggleBtn");
-  
-  if (alarmTime) timeInput.value = alarmTime;
-  updateAlarmUI();
-  
-  if (isAlarmOn) startAlarmCheck();
+  renderAlarmList();
+  if (alarms.some(a => a.on)) startAlarmCheck();
 }
 
-function updateAlarmUI() {
-  const status = document.getElementById("alarmStatus");
-  const btn = document.getElementById("alarmToggleBtn");
+function renderAlarmList() {
+  const container = document.getElementById("alarmListContainer");
+  container.innerHTML = "";
   
-  if (isAlarmOn) {
-    status.textContent = `${alarmTime}에 알람이 설정되어 있습니다.`;
-    btn.textContent = "알람 끄기";
-    btn.classList.add("off");
-  } else {
-    status.textContent = "알람이 설정되지 않았습니다.";
-    btn.textContent = "알람 설정하기";
-    btn.classList.remove("off");
-  }
+  alarms.forEach((alarm, i) => {
+    const card = document.createElement("div");
+    card.className = "alarm-card";
+    card.style.padding = "15px";
+    card.style.marginBottom = "12px";
+    
+    card.innerHTML = `
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <span class="section-label">알람 ${i+1}</span>
+        <input type="time" id="alarmTime${i}" class="edit-date" style="width:120px; font-size:18px;" 
+               value="${alarm.time}" onchange="updateAlarmTime(${i}, this.value)">
+        <button class="alarm-btn ${alarm.on ? 'off' : ''}" style="width:80px; padding:10px; margin:0; font-size:14px;"
+                onclick="toggleAlarmSlot(${i})">${alarm.on ? '끄기' : '켜기'}</button>
+      </div>
+    `;
+    container.appendChild(card);
+  });
 }
 
-window.toggleAlarm = function() {
-  const timeInput = document.getElementById("alarmTime");
-  if (!timeInput.value) {
-    alert("알람 시간을 선택해 주세요.");
+window.updateAlarmTime = function(index, value) {
+  alarms[index].time = value;
+  saveAlarms();
+};
+
+window.toggleAlarmSlot = function(index) {
+  if (!alarms[index].time) {
+    alert("시간을 먼저 선택해 주세요.");
     return;
   }
+  alarms[index].on = !alarms[index].on;
+  saveAlarms();
+  renderAlarmList();
   
-  isAlarmOn = !isAlarmOn;
-  alarmTime = timeInput.value;
-  
-  localStorage.setItem("alarmTime", alarmTime);
-  localStorage.setItem("isAlarmOn", isAlarmOn);
-  
-  updateAlarmUI();
-  
-  if (isAlarmOn) {
-    startAlarmCheck();
-    alert(`${alarmTime}에 알람이 설정되었습니다.`);
-  } else {
-    stopAlarmCheck();
-  }
+  if (alarms.some(a => a.on)) startAlarmCheck();
+  else stopAlarmCheck();
 };
+
+function saveAlarms() {
+  localStorage.setItem("alarms", JSON.stringify(alarms));
+}
 
 function startAlarmCheck() {
   if (alarmTimer) clearInterval(alarmTimer);
@@ -948,8 +962,14 @@ function startAlarmCheck() {
     const now = new Date();
     const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
     
-    if (currentTime === alarmTime) {
-      triggerAlarm();
+    const triggered = alarms.find(a => a.on && a.time === currentTime);
+    if (triggered) {
+      triggerAlarm(triggered.time);
+      // 알람 울린 후 해당 슬롯만 끔 (원치 않으면 주석 처리)
+      const idx = alarms.indexOf(triggered);
+      alarms[idx].on = false;
+      saveAlarms();
+      renderAlarmList();
     }
   }, 30000); // 30초마다 체크
 }
@@ -958,35 +978,24 @@ function stopAlarmCheck() {
   if (alarmTimer) clearInterval(alarmTimer);
 }
 
-function triggerAlarm() {
-  // 알람 소리 (간단한 비프음 시뮬레이션 또는 오디오 파일)
-  const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  const oscillator = audioCtx.createOscillator();
-  const gainNode = audioCtx.createGain();
+function triggerAlarm(time) {
+  const audio = document.getElementById("alarmAudio");
+  audio.currentTime = 0;
+  audio.play().catch(e => console.log("자동 재생 제한:", e));
 
-  oscillator.connect(gainNode);
-  gainNode.connect(audioCtx.destination);
-  
-  oscillator.type = 'sine';
-  oscillator.frequency.setValueAtTime(440, audioCtx.currentTime); // A4 note
-  gainNode.gain.setValueAtTime(0.5, audioCtx.currentTime);
-  
-  oscillator.start();
-  oscillator.stop(audioCtx.currentTime + 2); // 2초간 소리
-
-  // 진동 (지원되는 경우)
   if (navigator.vibrate) {
-    navigator.vibrate([500, 200, 500, 200, 500]);
+    navigator.vibrate([500, 200, 500, 200, 500, 200, 500]);
   }
 
-  alert(`⏰ 알람 시간입니다! (${alarmTime})`);
-  
-  // 알람 울린 후 자동 해제 (원할 경우 유지 가능)
-  isAlarmOn = false;
-  localStorage.setItem("isAlarmOn", isAlarmOn);
-  updateAlarmUI();
-  stopAlarmCheck();
+  document.getElementById("alarmTimeText").textContent = `설정 시간: ${time}`;
+  document.getElementById("alarmTriggerOverlay").classList.add("show");
 }
+
+window.stopAlarmMusic = function() {
+  const audio = document.getElementById("alarmAudio");
+  audio.pause();
+  document.getElementById("alarmTriggerOverlay").classList.remove("show");
+};
 
 // ===== 초기화 =====
 async function init() {
