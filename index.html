@@ -900,11 +900,11 @@ window.switchScreen = function(index) {
 
 // ===== 알람 로직 (최대 5개 + 소리 선택) =====
 const ALARM_SOUNDS = [
-  { name: "기본 알람 (태엽 종소리)", url: "https://www.orangefreesounds.com/wp-content/uploads/2014/08/Alarm-clock-sound-ringing-ringtone.mp3" },
-  { name: "긴급 알람 (핸드벨)", url: "https://orangefreesounds.com/wp-content/uploads/2021/04/Urgent-hand-bell-ringing-sound-effect.mp3" },
-  { name: "트렌디 댄스 1 (EDM)", url: "https://www.chosic.com/wp-content/uploads/2022/05/roa-music-summer-madness(chosic.com).mp3" },
-  { name: "트렌디 댄스 2 (House)", url: "https://www.chosic.com/wp-content/uploads/2025/01/Spiring-Want-you-chosic.com_.mp3" },
-  { name: "감성 발라드 (피아노)", url: "https://www.chosic.com/wp-content/uploads/2023/04/Lights(chosic.com).mp3" }
+  { name: "기본 알람 (에이전트)", url: "https://upload.wikimedia.org/wikipedia/commons/3/34/Sound_Effect_-_Emergency_Alarm.mp3" },
+  { name: "클래식 시계", url: "https://upload.wikimedia.org/wikipedia/commons/2/23/Clock_Alarm.mp3" },
+  { name: "전자 댄스 1", url: "https://upload.wikimedia.org/wikipedia/commons/d/da/Ambient-electronic-loop-104-bpm.mp3" },
+  { name: "전자 댄스 2", url: "https://upload.wikimedia.org/wikipedia/commons/0/0a/Electronic_Music_-_Loop_3.mp3" },
+  { name: "잔잔한 피아노", url: "https://upload.wikimedia.org/wikipedia/commons/2/2a/Piano_melody_loop_85_bpm.mp3" }
 ];
 
 let alarms = JSON.parse(localStorage.getItem("alarms")) || [
@@ -966,10 +966,16 @@ window.updateAlarmSound = function(index, value) {
 window.previewSound = function(index) {
   const audio = document.getElementById("alarmAudio");
   const soundIdx = alarms[index].sound;
-  audio.src = ALARM_SOUNDS[soundIdx].url;
-  audio.currentTime = 0;
-  audio.play();
-  setTimeout(() => { if(!document.getElementById("alarmTriggerOverlay").classList.contains("show")) audio.pause(); }, 5000);
+  const url = ALARM_SOUNDS[soundIdx].url;
+  
+  audio.src = url;
+  audio.load();
+  audio.play().catch(e => {
+    console.error("Audio play failed:", e);
+    alert("소리 재생 실패: 브라우저가 자동 재생을 차단했거나 파일에 문제가 있습니다. 다른 소리를 선택해 보세요.");
+  });
+  
+  setTimeout(() => { if(!document.getElementById("alarmTriggerOverlay").classList.contains("show")) audio.pause(); }, 7000);
 };
 
 window.toggleAlarmSlot = function(index) {
