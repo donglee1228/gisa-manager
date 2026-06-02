@@ -122,112 +122,10 @@ h2{text-align:center;font-size:18px;color:#aaa;margin-bottom:16px}
   width:100%;padding:14px;margin-top:16px;background:#333;border:none;
   border-radius:12px;color:#eee;font-size:16px;font-weight:600;cursor:pointer;
 }
-  /* 화면 전환 및 하단 바 스타일 */
-  #app-wrapper {
-    overflow: hidden;
-    position: relative;
-    width: 100%;
-    min-height: 100vh;
-    padding-bottom: 70px; /* 하단 바 공간 */
-  }
-  .screen-container {
-    display: flex;
-    width: 200%;
-    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-  .screen {
-    width: 50%;
-    min-height: 100vh;
-    padding: 16px;
-    box-sizing: border-box;
-  }
-  .bottom-nav {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 60px;
-    background: #16213e;
-    border-top: 1px solid #333;
-    display: flex;
-    justify-content: space-around;
-    align-items: center;
-    z-index: 1000;
-  }
-  .nav-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    color: #888;
-    font-size: 11px;
-    cursor: pointer;
-    transition: color 0.2s;
-  }
-  .nav-item.active {
-    color: #e94560;
-  }
-  .nav-icon {
-    font-size: 20px;
-    margin-bottom: 2px;
-  }
-
-  /* 알람 화면 스타일 */
-  .alarm-card {
-    background: #16213e;
-    border-radius: 15px;
-    padding: 20px;
-    margin-bottom: 20px;
-    text-align: center;
-    border: 1px solid #333;
-  }
-  .alarm-time-input {
-    width: 100%;
-    background: #1a1a2e;
-    border: 2px solid #e94560;
-    border-radius: 12px;
-    color: #fff;
-    font-size: 32px;
-    font-weight: 800;
-    padding: 15px;
-    text-align: center;
-    margin: 15px 0;
-    color-scheme: dark;
-  }
-  .alarm-status {
-    font-size: 15px;
-    color: #aaa;
-    margin-top: 10px;
-  }
-  .alarm-btn {
-    width: 100%;
-    padding: 16px;
-    background: #4CAF50;
-    color: white;
-    border: none;
-    border-radius: 12px;
-    font-size: 18px;
-    font-weight: 700;
-    cursor: pointer;
-    margin-top: 10px;
-  }
-  .alarm-btn.off { background: #555; }
-  .alarm-list-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background: #1a1a2e;
-    padding: 15px;
-    border-radius: 10px;
-    margin-top: 10px;
-  }
 </style>
 </head>
 <body>
 
-<div id="app-wrapper">
-  <div class="screen-container" id="screenContainer">
-    <!-- 메인 화면 (기존 기사 관리) -->
-    <div id="main-screen" class="screen">
       <div id="app">
         <button class="settings-btn" onclick="openSettings()">&#9881;</button>
         <h2>기사 관리</h2>
@@ -260,51 +158,6 @@ h2{text-align:center;font-size:18px;color:#aaa;margin-bottom:16px}
           </div>
         </div>
       </div>
-    </div>
-
-    <!-- 알람 화면 -->
-    <div id="alarm-screen" class="screen">
-      <h2>알람 설정 (최대 5개)</h2>
-      <div id="alarmListContainer">
-        <!-- 알람 슬롯 5개 생성 -->
-      </div>
-      
-      <div class="section-label" style="margin-top:20px">작동 안내</div>
-      <div class="record-card">
-        <div class="record-detail">
-          • 지정된 시간이 되면 <b>신나는 댄스 음악</b>이 울립니다.<br>
-          • 브라우저 창이 열려 있어야 작동합니다.<br>
-          • 소리가 들리지 않으면 휴대폰 무음 모드를 확인해 주세요.
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- 알람 울림 모달 (음악 정지용) -->
-  <div class="print-overlay" id="alarmTriggerOverlay">
-    <div style="text-align:center; padding-top:100px;">
-      <div style="font-size:80px; margin-bottom:20px;">⏰</div>
-      <h1 style="color:#e94560; margin-bottom:10px;">알람 울림!</h1>
-      <p id="alarmTimeText" style="font-size:24px; margin-bottom:30px;"></p>
-      <button class="save-btn" onclick="stopAlarmMusic()" style="background:#e94560; width:80%;">알람 끄기 (음악 정지)</button>
-    </div>
-  </div>
-
-  <!-- 알람 음악 요소 -->
-  <audio id="alarmAudio" loop></audio>
-
-  <!-- 하단 네비게이션 -->
-  <div class="bottom-nav">
-    <div class="nav-item active" id="navMain" onclick="switchScreen(0)">
-      <div class="nav-icon">📋</div>
-      <div>기록관리</div>
-    </div>
-    <div class="nav-item" id="navAlarm" onclick="switchScreen(1)">
-      <div class="nav-icon">⏰</div>
-      <div>알람설정</div>
-    </div>
-  </div>
-</div>
 
 <!-- 출력 모달 -->
 <div class="print-overlay" id="printOverlay">
@@ -359,7 +212,7 @@ const MAX_COUNT = 5;
 const EXPIRY_DAYS = 30;
 const COLORS = ["#4CAF50","#2196F3","#FF9800","#9C27B0","#E91E63","#00BCD4","#FF5722","#607D8B"];
 const DEFAULT_WORKERS = ["이기사"];
-const DEFAULT_SITES = [{name:"소노벨",color:"#4CAF50"},{name:"쿠팡",color:"#2196F3"},{name:"12345",color:"#FF9800"},{name:"평택쿠팡",color:"#9C27B0"}];
+const DEFAULT_SITES = [{name:"소노벨",color:"#4CAF50"},{name:"쿠팡",color:"#2196F3"},{name:"평택쿠팡",color:"#FF9800"}];
 
 let WORKERS = [];
 let SITES = [];
@@ -398,6 +251,16 @@ function formatDate(d) {
 function dateKey(d) {
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
 }
+// 당월(현재 출근일 기준) 키 "YYYY-MM"
+function currentMonthKey() {
+  const wd = getWorkDate();
+  return `${wd.getFullYear()}-${String(wd.getMonth()+1).padStart(2,"0")}`;
+}
+// 당월에 속한 날짜키만 정렬해서 반환
+function currentMonthDates() {
+  const cm = currentMonthKey();
+  return Object.keys(allRecords).filter(dk => dk.startsWith(cm)).sort();
+}
 
 // ===== 만료 체크 =====
 async function checkExpiry() {
@@ -425,7 +288,9 @@ function renderAll() {
 }
 
 function renderWorkDate() {
-  document.getElementById("workDate").textContent = formatDate(getWorkDate()) + " 기록";
+  const wd = getWorkDate();
+  document.getElementById("workDate").textContent =
+    `${wd.getFullYear()}년 ${wd.getMonth()+1}월 · ` + formatDate(wd) + " 기록";
 }
 
 function renderWorkers() {
@@ -540,8 +405,9 @@ window.toggleHistory = function() {
 
 function renderHistory() {
   const area = document.getElementById("historyArea");
-  const dates = Object.keys(allRecords).sort().reverse().slice(0, 30);
-  if (dates.length === 0) { area.innerHTML = '<p style="text-align:center;color:#888;padding:16px">기록 없음</p>'; return; }
+  // 당월(현재 달) 기록만 최신순으로
+  const dates = currentMonthDates().reverse();
+  if (dates.length === 0) { area.innerHTML = '<p style="text-align:center;color:#888;padding:16px">이번 달 기록 없음</p>'; return; }
   let html = '<table class="history-table"><thead><tr><th>날짜</th>';
   WORKERS.forEach(w => html += `<th>${w}</th>`);
   html += '</tr></thead><tbody>';
@@ -561,10 +427,9 @@ function renderHistory() {
     html += '</tr>';
   }
   html += '</tbody></table>';
-  // 월간 합계
-  const wd = getWorkDate();
-  const curMonth = `${wd.getFullYear()}-${String(wd.getMonth()+1).padStart(2,"0")}`;
-  const monthDates = dates.filter(d => d.startsWith(curMonth));
+  // 월간 합계 (당월)
+  const curMonth = currentMonthKey();
+  const monthDates = dates;
   if (monthDates.length > 0) {
     const totals = {};
     WORKERS.forEach(w => { totals[w] = {}; });
@@ -601,10 +466,12 @@ window.deleteRecord = async function(dk, worker) {
 
 // ===== 출력 =====
 window.printWorker = function(worker) {
-  const dates = Object.keys(allRecords).sort();
-  if (dates.length === 0) { alert("기록이 없습니다"); return; }
+  // 당월(현재 달) 기록만 출력
+  const dates = currentMonthDates();
+  if (dates.length === 0) { alert("이번 달 기록이 없습니다"); return; }
   const dayNames = ["일","월","화","수","목","금","토"];
-  let text = `[ ${worker} ]\n\n`;
+  const cm = currentMonthKey().split("-");
+  let text = `[ ${worker} ] ${+cm[0]}년 ${+cm[1]}월\n\n`;
   let workerTotal = 0;
   const siteTotals = {};
   for (const dk of dates) {
@@ -881,183 +748,12 @@ onValue(ref(db, "records"), snap => {
   if (document.getElementById("historyArea").style.display !== "none") renderHistory();
 });
 
-// ===== 화면 전환 로직 =====
-window.switchScreen = function(index) {
-  const container = document.getElementById("screenContainer");
-  const navMain = document.getElementById("navMain");
-  const navAlarm = document.getElementById("navAlarm");
-  
-  container.style.transform = `translateX(-${index * 50}%)`;
-  
-  if (index === 0) {
-    navMain.classList.add("active");
-    navAlarm.classList.remove("active");
-  } else {
-    navMain.classList.remove("active");
-    navAlarm.classList.add("active");
-  }
-};
-
-// ===== 알람 로직 (최대 5개 + 소리 선택) =====
-let autoStopTimer = null; // 10분 자동 종료 타이머
-const ALARM_SOUNDS = [
-  { name: "기본 알람 (디지털)", url: "https://upload.wikimedia.org/wikipedia/commons/f/f4/Alarm_Clock_%28Directory.Audio%29.mp3" },
-  { name: "클래식 벨 (기계식)", url: "https://upload.wikimedia.org/wikipedia/commons/6/69/Mechanical_Clock_Ring_%28Directory.Audio%29.mp3" },
-  { name: "신나는 댄스 1 (에너지)", url: "https://upload.wikimedia.org/wikipedia/commons/f/f4/Sample_dance_1.mp3" },
-  { name: "신나는 댄스 2 (일렉트로)", url: "https://upload.wikimedia.org/wikipedia/commons/4/46/Electroman_Adventures_V3_by_Waterflame.mp3" },
-  { name: "감성 발라드 (피아노)", url: "https://upload.wikimedia.org/wikipedia/commons/f/f9/Touching_Moments_Two_-_Higher_%28ISRC_USUAN1100037%29.mp3" }
-];
-
-let alarms = JSON.parse(localStorage.getItem("alarms")) || [
-  {time: "", on: false, sound: 0}, {time: "", on: false, sound: 0}, 
-  {time: "", on: false, sound: 0}, {time: "", on: false, sound: 0}, 
-  {time: "", on: false, sound: 0}
-];
-let alarmTimer = null;
-
-function initAlarm() {
-  renderAlarmList();
-  if (alarms.some(a => a.on)) startAlarmCheck();
-}
-
-function renderAlarmList() {
-  const container = document.getElementById("alarmListContainer");
-  container.innerHTML = "";
-  
-  alarms.forEach((alarm, i) => {
-    const card = document.createElement("div");
-    card.className = "alarm-card";
-    card.style.padding = "15px";
-    card.style.marginBottom = "12px";
-    card.style.textAlign = "left";
-    
-    let soundOptions = ALARM_SOUNDS.map((s, si) => 
-      `<option value="${si}" ${alarm.sound == si ? 'selected' : ''}>${s.name}</option>`
-    ).join("");
-
-    card.innerHTML = `
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-        <span class="section-label">알람 ${i+1}</span>
-        <input type="time" id="alarmTime${i}" class="edit-date" style="width:120px; font-size:18px;" 
-               value="${alarm.time}" onchange="updateAlarmTime(${i}, this.value)">
-        <button class="alarm-btn ${alarm.on ? 'off' : ''}" style="width:60px; padding:10px; margin:0; font-size:14px;"
-                onclick="toggleAlarmSlot(${i})">${alarm.on ? '끄기' : '켜기'}</button>
-      </div>
-      <div style="display:flex; gap:8px;">
-        <select onchange="updateAlarmSound(${i}, this.value)" class="edit-date" style="flex:1; padding:8px; font-size:13px;">
-          ${soundOptions}
-        </select>
-        <button onclick="previewSound(${i})" style="padding:8px 12px; background:#0f3460; border:1px solid #2196F3; border-radius:8px; color:#2196F3; font-size:12px;">🎧 들어보기</button>
-      </div>
-    `;
-    container.appendChild(card);
-  });
-}
-
-window.updateAlarmTime = function(index, value) {
-  alarms[index].time = value;
-  saveAlarms();
-};
-
-window.updateAlarmSound = function(index, value) {
-  alarms[index].sound = parseInt(value);
-  saveAlarms();
-};
-
-window.previewSound = function(index) {
-  const audio = document.getElementById("alarmAudio");
-  const soundIdx = alarms[index].sound;
-  const url = ALARM_SOUNDS[soundIdx].url;
-  
-  audio.src = url;
-  audio.load();
-  audio.play().catch(e => {
-    console.error("Audio play failed:", e);
-    alert("소리 재생 실패: 브라우저가 자동 재생을 차단했거나 파일에 문제가 있습니다. 다른 소리를 선택해 보세요.");
-  });
-  
-  setTimeout(() => { if(!document.getElementById("alarmTriggerOverlay").classList.contains("show")) audio.pause(); }, 7000);
-};
-
-window.toggleAlarmSlot = function(index) {
-  if (!alarms[index].time) {
-    alert("시간을 먼저 선택해 주세요.");
-    return;
-  }
-  alarms[index].on = !alarms[index].on;
-  saveAlarms();
-  renderAlarmList();
-  
-  if (alarms.some(a => a.on)) startAlarmCheck();
-  else stopAlarmCheck();
-};
-
-function saveAlarms() {
-  localStorage.setItem("alarms", JSON.stringify(alarms));
-}
-
-function startAlarmCheck() {
-  if (alarmTimer) clearInterval(alarmTimer);
-  alarmTimer = setInterval(() => {
-    const now = new Date();
-    const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-    
-    const triggered = alarms.find(a => a.on && a.time === currentTime);
-    if (triggered) {
-      triggerAlarm(triggered.time, triggered.sound);
-      // 알람 울린 후 해당 슬롯만 끔
-      const idx = alarms.indexOf(triggered);
-      alarms[idx].on = false;
-      saveAlarms();
-      renderAlarmList();
-    }
-  }, 30000); // 30초마다 체크
-}
-
-function stopAlarmCheck() {
-  if (alarmTimer) clearInterval(alarmTimer);
-}
-
-function triggerAlarm(time, soundIdx) {
-  const audio = document.getElementById("alarmAudio");
-  audio.src = ALARM_SOUNDS[soundIdx].url;
-  audio.currentTime = 0;
-  audio.play().catch(e => console.log("자동 재생 제한:", e));
-
-  if (navigator.vibrate) {
-    navigator.vibrate([500, 200, 500, 200, 500, 200, 500]);
-  }
-
-  document.getElementById("alarmTimeText").textContent = `설정 시간: ${time}`;
-  document.getElementById("alarmTriggerOverlay").classList.add("show");
-
-  // ★ 10분 후 자동 종료 기능 추가 (층간소음 방지)
-  if (autoStopTimer) clearTimeout(autoStopTimer);
-  autoStopTimer = setTimeout(() => {
-    console.log("10분 경과: 알람을 자동으로 종료합니다.");
-    stopAlarmMusic();
-  }, 600000); // 10분 = 600,000ms
-}
-
-window.stopAlarmMusic = function() {
-  const audio = document.getElementById("alarmAudio");
-  audio.pause();
-  document.getElementById("alarmTriggerOverlay").classList.remove("show");
-  
-  // 수동으로 껐을 경우 자동 종료 타이머 해제
-  if (autoStopTimer) {
-    clearTimeout(autoStopTimer);
-    autoStopTimer = null;
-  }
-};
-
 // ===== 초기화 =====
 async function init() {
   const ok = await checkExpiry();
   if (!ok) return;
   set(ref(db, "lastActivity"), Date.now());
   loadConfig();
-  initAlarm(); // 알람 초기화 추가
 }
 init();
 </script>
