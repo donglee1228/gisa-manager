@@ -13,6 +13,7 @@
 body{
   font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
   background:#1a1a2e;color:#eee;min-height:100vh;padding:16px;
+  padding-bottom:84px;
   -webkit-tap-highlight-color:transparent;user-select:none;
 }
 h2{text-align:center;font-size:18px;color:#aaa;margin-bottom:16px}
@@ -122,12 +123,34 @@ h2{text-align:center;font-size:18px;color:#aaa;margin-bottom:16px}
   width:100%;padding:14px;margin-top:16px;background:#333;border:none;
   border-radius:12px;color:#eee;font-size:16px;font-weight:600;cursor:pointer;
 }
+
+/* 탭 */
+.tab-page{display:none}
+.tab-page.active{display:block}
+.tab-bar{
+  position:fixed;left:0;right:0;bottom:0;z-index:100;
+  display:flex;background:#16213e;border-top:1px solid #333;
+  padding-bottom:env(safe-area-inset-bottom,0);
+}
+.tab-item{
+  flex:1;text-align:center;padding:14px 0 16px;font-size:15px;font-weight:700;
+  color:#888;cursor:pointer;transition:color 0.15s;
+}
+.tab-item.active{color:#e94560}
+.tab-item .tab-ico{display:block;font-size:20px;margin-bottom:2px}
+/* 월별 */
+.month-block{background:#16213e;border-radius:12px;padding:14px;margin:12px 0}
+.month-title{font-size:17px;font-weight:800;color:#e94560;margin-bottom:10px}
+.month-empty{text-align:center;color:#888;padding:40px 16px}
 </style>
 </head>
 <body>
 
       <div id="app">
         <button class="settings-btn" onclick="openSettings()">&#9881;</button>
+
+      <!-- 기록 탭 -->
+      <div class="tab-page active" id="tabRecord">
         <h2>기사 관리</h2>
         <div class="work-date" id="workDate"></div>
         <div class="section-label">누구의 기록?</div>
@@ -156,6 +179,26 @@ h2{text-align:center;font-size:18px;color:#aaa;margin-bottom:16px}
             <button class="edit-delete-btn" id="editDeleteBtn" style="display:none" onclick="deleteEdit()">이 날 기록 삭제</button>
             <div class="save-msg" id="editMsg"></div>
           </div>
+        </div>
+      </div>
+      <!-- /기록 탭 -->
+
+      <!-- 월별 탭 -->
+      <div class="tab-page" id="tabMonthly">
+        <h2>월별 기록</h2>
+        <div id="monthlyArea"></div>
+      </div>
+      <!-- /월별 탭 -->
+
+      </div>
+
+      <!-- 하단 탭바 -->
+      <div class="tab-bar">
+        <div class="tab-item active" id="tabBtnRecord" onclick="switchTab('record')">
+          <span class="tab-ico">&#128221;</span>기록
+        </div>
+        <div class="tab-item" id="tabBtnMonthly" onclick="switchTab('monthly')">
+          <span class="tab-ico">&#128197;</span>월별
         </div>
       </div>
 
@@ -513,6 +556,86 @@ window.copyPrint = async function() {
 };
 window.closePrint = function() { document.getElementById("printOverlay").classList.remove("show"); };
 
+// ===== 탭 전환 =====
+window.switchTab = function(tab) {
+  const isRecord = tab === "record";
+  document.getElementById("tabRecord").classList.toggle("active", isRecord);
+  document.getElementById("tabMonthly").classList.toggle("active", !isRecord);
+  document.getElementById("tabBtnRecord").classList.toggle("active", isRecord);
+  document.getElementById("tabBtnMonthly").classList.toggle("active", !isRecord);
+  if (!isRecord) renderMonthly();
+  window.scrollTo(0, 0);
+};
+
+// ===== 월별 탭: 전체 달을 월 단위로 그룹핑 =====
+function renderMonthly() {
+  const area = document.getElementById("monthlyArea");
+  const dates = Object.keys(allRecords).sort(); // "YYYY-MM-DD" 오름차순
+  if (dates.length === 0) {
+    area.innerHTML = '<div class="month-empty">아직 기록이 없습니다</div>';
+    return;
+  }
+  // 월(YYYY-MM)별로 날짜키 그룹핑
+  const groups = {};
+  for (const dk of dates) {
+    const mk = dk.slice(0, 7); // "YYYY-MM"
+    (groups[mk] = groups[mk] || []).push(dk);
+  }
+  const days = ["일","월","화","수","목","금","토"];
+  const months = Object.keys(groups).sort().reverse(); // 최신 달이 위로
+  let html = "";
+  for (const mk of months) {
+    const [my, mm] = mk.split("-");
+    const monthDates = groups[mk]; // 이미 오름차순
+    html += `<div class="month-block">`;
+    html += `<div class="month-title">${+my}년 ${+mm}월</div>`;
+
+    // 날짜별 표 (기존 history-table 스타일 재사용)
+    html += '<table class="history-table"><thead><tr><th>날짜</th>';
+    WORKERS.forEach(w => html += `<th>${w}</th>`);
+    html += '</tr></thead><tbody>';
+    for (const dk of monthDates) {
+      const dayRec = allRecords[dk] || {};
+      const [y,m,d] = dk.split("-");
+      const dt = new Date(+y, +m-1, +d);
+      html += `<tr><td>${+m}/${+d}(${days[dt.getDay()]})</td>`;
+      WORKERS.forEach(w => {
+        const wr = dayRec[w] || {};
+        const parts = Object.entries(wr).map(([s,c]) => `${s}${c}`).join(" ");
+        html += `<td>${parts || "-"}</td>`;
+      });
+      html += '</tr>';
+    }
+    html += '</tbody></table>';
+
+    // 이 달 기사별/현장별 합계 + 회전수 총합 (기존 집계 로직 재사용)
+    const totals = {};
+    WORKERS.forEach(w => { totals[w] = {}; });
+    for (const dk of monthDates) {
+      for (const [w, sites] of Object.entries(allRecords[dk] || {})) {
+        if (!totals[w]) totals[w] = {};
+        for (const [s, c] of Object.entries(sites)) { totals[w][s] = (totals[w][s] || 0) + c; }
+      }
+    }
+    html += `<h3 style="margin-top:16px;font-size:14px;color:#aaa">${+mm}월 합계</h3>`;
+    html += '<table class="history-table"><thead><tr><th></th>';
+    SITES.forEach(s => html += `<th style="color:${s.color}">${s.name}</th>`);
+    html += '<th>합계</th></tr></thead><tbody>';
+    let monthGrand = 0;
+    WORKERS.forEach(w => {
+      let rt = 0;
+      html += `<tr><td style="font-weight:700">${w}</td>`;
+      SITES.forEach(s => { const v = totals[w]?.[s.name] || 0; rt += v; html += `<td>${v}</td>`; });
+      monthGrand += rt;
+      html += `<td style="font-weight:700;color:#e94560">${rt}</td></tr>`;
+    });
+    html += '</tbody></table>';
+    html += `<div style="text-align:right;margin-top:8px;font-weight:700;color:#e94560">총 ${monthGrand}회전</div>`;
+    html += `</div>`;
+  }
+  area.innerHTML = html;
+}
+
 // ===== 수정하기 =====
 let editWorker = null;
 let editCounts = {};
@@ -746,6 +869,7 @@ onValue(ref(db, "records"), snap => {
   allRecords = snap.val() || {};
   renderTodayRecords();
   if (document.getElementById("historyArea").style.display !== "none") renderHistory();
+  if (document.getElementById("tabMonthly").classList.contains("active")) renderMonthly();
 });
 
 // ===== 초기화 =====
