@@ -140,8 +140,14 @@ h2{text-align:center;font-size:18px;color:#aaa;margin-bottom:16px}
 .tab-item .tab-ico{display:block;font-size:20px;margin-bottom:2px}
 /* 월별 */
 .month-block{background:#16213e;border-radius:12px;padding:14px;margin:12px 0}
-.month-title{font-size:17px;font-weight:800;color:#e94560;margin-bottom:10px}
+.month-title{font-size:17px;font-weight:800;color:#e94560}
 .month-empty{text-align:center;color:#888;padding:40px 16px}
+.month-head{display:flex;justify-content:space-between;align-items:center;cursor:pointer;padding:4px 0;-webkit-tap-highlight-color:transparent}
+.month-head:active{opacity:0.7}
+.month-head-right{display:flex;align-items:center;gap:10px}
+.month-mini{font-size:13px;color:#e94560;font-weight:700}
+.month-chev{font-size:13px;color:#888;width:16px;text-align:center}
+.month-body{margin-top:12px}
 </style>
 </head>
 <body>
@@ -573,7 +579,19 @@ window.switchTab = function(tab) {
   window.scrollTo(0, 0);
 };
 
-// ===== 월별 탭: 전체 달을 월 단위로 그룹핑 =====
+// ===== 월별 탭: 전체 달을 월 단위로 그룹핑 (드롭다운 아코디언) =====
+let openMonths = null; // 펼쳐진 달 "YYYY-MM" 집합 (렌더 사이 상태 유지)
+
+window.toggleMonth = function(mk) {
+  const body = document.getElementById("mbody_" + mk);
+  const chev = document.getElementById("mchev_" + mk);
+  if (!body) return;
+  const willOpen = body.style.display === "none";
+  body.style.display = willOpen ? "block" : "none";
+  if (chev) chev.textContent = willOpen ? "▲" : "▼";
+  if (willOpen) openMonths.add(mk); else openMonths.delete(mk);
+};
+
 function renderMonthly() {
   const area = document.getElementById("monthlyArea");
   const dates = Object.keys(allRecords).sort(); // "YYYY-MM-DD" 오름차순
@@ -589,14 +607,35 @@ function renderMonthly() {
   }
   const days = ["일","월","화","수","목","금","토"];
   const months = Object.keys(groups).sort().reverse(); // 최신 달이 위로
+  if (openMonths === null) openMonths = new Set([months[0]]); // 최초엔 최신 달만 펼침
   let html = "";
   for (const mk of months) {
     const [my, mm] = mk.split("-");
     const monthDates = groups[mk]; // 이미 오름차순
-    html += `<div class="month-block">`;
-    html += `<div class="month-title">${+my}년 ${+mm}월</div>`;
+    const isOpen = openMonths.has(mk);
 
-    // 날짜별 표 (기존 history-table 스타일 재사용)
+    // 이 달 합계 미리 계산 (헤더 회전수 표시용)
+    const totals = {};
+    WORKERS.forEach(w => { totals[w] = {}; });
+    for (const dk of monthDates) {
+      for (const [w, sites] of Object.entries(allRecords[dk] || {})) {
+        if (!totals[w]) totals[w] = {};
+        for (const [s, c] of Object.entries(sites)) { totals[w][s] = (totals[w][s] || 0) + c; }
+      }
+    }
+    let monthGrand = 0;
+    for (const w of Object.keys(totals)) for (const c of Object.values(totals[w])) monthGrand += c;
+
+    html += `<div class="month-block">`;
+    // 드롭다운 헤더
+    html += `<div class="month-head" onclick="toggleMonth('${mk}')">`;
+    html += `<span class="month-title">${+my}년 ${+mm}월</span>`;
+    html += `<span class="month-head-right"><span class="month-mini">${monthGrand}회전</span><span class="month-chev" id="mchev_${mk}">${isOpen ? "▲" : "▼"}</span></span>`;
+    html += `</div>`;
+    // 드롭다운 본문
+    html += `<div class="month-body" id="mbody_${mk}" style="display:${isOpen ? "block" : "none"}">`;
+
+    // 날짜별 표
     html += '<table class="history-table"><thead><tr><th>날짜</th>';
     WORKERS.forEach(w => html += `<th>${w}</th>`);
     html += '</tr></thead><tbody>';
@@ -614,33 +653,70 @@ function renderMonthly() {
     }
     html += '</tbody></table>';
 
-    // 이 달 기사별/현장별 합계 + 회전수 총합 (기존 집계 로직 재사용)
-    const totals = {};
-    WORKERS.forEach(w => { totals[w] = {}; });
-    for (const dk of monthDates) {
-      for (const [w, sites] of Object.entries(allRecords[dk] || {})) {
-        if (!totals[w]) totals[w] = {};
-        for (const [s, c] of Object.entries(sites)) { totals[w][s] = (totals[w][s] || 0) + c; }
-      }
-    }
+    // 이 달 기사별/현장별 합계 표
     html += `<h3 style="margin-top:16px;font-size:14px;color:#aaa">${+mm}월 합계</h3>`;
     html += '<table class="history-table"><thead><tr><th></th>';
     SITES.forEach(s => html += `<th style="color:${s.color}">${s.name}</th>`);
     html += '<th>합계</th></tr></thead><tbody>';
-    let monthGrand = 0;
     WORKERS.forEach(w => {
       let rt = 0;
       html += `<tr><td style="font-weight:700">${w}</td>`;
       SITES.forEach(s => { const v = totals[w]?.[siteKey(s.name)] || 0; rt += v; html += `<td>${v}</td>`; });
-      monthGrand += rt;
       html += `<td style="font-weight:700;color:#e94560">${rt}</td></tr>`;
     });
     html += '</tbody></table>';
     html += `<div style="text-align:right;margin-top:8px;font-weight:700;color:#e94560">총 ${monthGrand}회전</div>`;
-    html += `</div>`;
+    // 이 달 출력 버튼
+    html += `<button class="print-btn" style="margin-top:12px" onclick="printMonth('${mk}')">${+mm}월 기록 출력</button>`;
+
+    html += `</div>`; // /month-body
+    html += `</div>`; // /month-block
   }
   area.innerHTML = html;
 }
+
+// ===== 월별 출력 (해당 달 전체 기사 기록을 텍스트로) =====
+window.printMonth = function(mk) {
+  const monthDates = Object.keys(allRecords).filter(dk => dk.slice(0,7) === mk).sort();
+  if (monthDates.length === 0) { alert("기록이 없습니다"); return; }
+  const dayNames = ["일","월","화","수","목","금","토"];
+  const [my, mm] = mk.split("-");
+  let text = `[ ${+my}년 ${+mm}월 ] 월별 기록\n`;
+  const grandSite = {};
+  let grandTotal = 0;
+  WORKERS.forEach(worker => {
+    const has = monthDates.some(dk => allRecords[dk]?.[worker]);
+    if (!has) return;
+    text += `\n■ ${worker}\n`;
+    let wTotal = 0;
+    const wSite = {};
+    for (const dk of monthDates) {
+      const wr = allRecords[dk]?.[worker];
+      if (!wr) continue;
+      const [y,m,d] = dk.split("-");
+      const dt = new Date(+y, +m-1, +d);
+      const parts = [];
+      let dayTotal = 0;
+      for (const [site, cnt] of Object.entries(wr)) {
+        const nm = keyToName(site);
+        parts.push(`${nm} ${cnt}`);
+        dayTotal += cnt;
+        wSite[nm] = (wSite[nm] || 0) + cnt;
+        grandSite[nm] = (grandSite[nm] || 0) + cnt;
+      }
+      wTotal += dayTotal;
+      text += `${+m}/${+d} ${dayNames[dt.getDay()]}  ${parts.join(" / ")}  +${dayTotal}\n`;
+    }
+    text += `  └ ${Object.entries(wSite).map(([s,c]) => `${s} ${c}`).join(", ")} = ${wTotal}회전\n`;
+    grandTotal += wTotal;
+  });
+  text += `\n----------\n[ 전체 합계 ]\n`;
+  for (const [s, c] of Object.entries(grandSite)) text += `${s}: ${c}\n`;
+  text += `총 ${grandTotal}회전`;
+  document.getElementById("printBox").textContent = text;
+  document.getElementById("printOverlay").classList.add("show");
+  document.getElementById("copyMsg").textContent = "";
+};
 
 // ===== 수정하기 =====
 let editWorker = null;
