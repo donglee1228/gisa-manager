@@ -263,6 +263,11 @@ let selectedWorker = null;
 let selectedCounts = {};
 let allRecords = {};
 
+// Firebase 키로 못 쓰는 문자(. # $ [ ] /)를 _ 로 치환 — 저장 키 안전화 (예: "용인쿠팡(3.5톤)")
+function siteKey(name){ return name.replace(/[.#$\[\]\/]/g, "_"); }
+// 저장 키 → 표시용 현장명 복원
+function keyToName(k){ const s = SITES.find(x => siteKey(x.name) === k); return s ? s.name : k; }
+
 // ===== 설정 로드 (Firebase에서) =====
 function loadConfig() {
   onValue(ref(db, "config"), snap => {
@@ -400,12 +405,12 @@ window.saveRecord = async function() {
   const dk = dateKey(wd);
   const worker = WORKERS[selectedWorker];
   const data = {};
-  SITES.forEach((site, si) => { if (selectedCounts[si] > 0) data[site.name] = selectedCounts[si]; });
+  SITES.forEach((site, si) => { if (selectedCounts[si] > 0) data[siteKey(site.name)] = selectedCounts[si]; });
   if (Object.keys(data).length === 0) return;
   await set(ref(db, `records/${dk}/${worker}`), data);
   await set(ref(db, "lastActivity"), Date.now());
   const msg = document.getElementById("saveMsg");
-  const parts = Object.entries(data).map(([k,v]) => `${k} x${v}`).join(", ");
+  const parts = Object.entries(data).map(([k,v]) => `${keyToName(k)} x${v}`).join(", ");
   msg.textContent = `${formatDate(wd)} ${worker}: ${parts} 저장!`;
   msg.style.color = "#4CAF50";
   setTimeout(() => { msg.textContent = ""; }, 3000);
@@ -430,8 +435,8 @@ function renderTodayRecords() {
     const card = document.createElement("div");
     card.className = "record-card";
     const parts = Object.entries(sites).map(([s,c]) => {
-      const site = SITES.find(x => x.name === s);
-      return `<span style="color:${site ? site.color : '#eee'}">${s} x${c}</span>`;
+      const site = SITES.find(x => siteKey(x.name) === s);
+      return `<span style="color:${site ? site.color : '#eee'}">${site ? site.name : s} x${c}</span>`;
     }).join("");
     const total = Object.values(sites).reduce((a,b) => a+b, 0);
     card.innerHTML = `<div class="record-header">${worker} (${total}회)</div><div class="record-detail">${parts}</div>`;
@@ -462,7 +467,7 @@ function renderHistory() {
     html += `<tr><td>${+m}/${+d}(${days[dt.getDay()]})</td>`;
     WORKERS.forEach(w => {
       const wr = dayRec[w] || {};
-      const parts = Object.entries(wr).map(([s,c]) => `${s}${c}`).join(" ");
+      const parts = Object.entries(wr).map(([s,c]) => `${keyToName(s)}${c}`).join(" ");
       if (parts) {
         html += `<td>${parts} <span style="color:#e94560;cursor:pointer;font-size:11px" onclick="deleteRecord('${dk}','${w}')">[x]</span></td>`;
       } else { html += `<td>-</td>`; }
@@ -489,7 +494,7 @@ function renderHistory() {
     WORKERS.forEach(w => {
       let rt = 0;
       html += `<tr><td style="font-weight:700">${w}</td>`;
-      SITES.forEach(s => { const v = totals[w]?.[s.name] || 0; rt += v; html += `<td>${v}</td>`; });
+      SITES.forEach(s => { const v = totals[w]?.[siteKey(s.name)] || 0; rt += v; html += `<td>${v}</td>`; });
       html += `<td style="font-weight:700;color:#e94560">${rt}</td></tr>`;
     });
     html += '</tbody></table>';
@@ -525,9 +530,10 @@ window.printWorker = function(worker) {
     const parts = [];
     let dayTotal = 0;
     for (const [site, cnt] of Object.entries(wr)) {
-      parts.push(`${site} ${cnt}`);
+      const nm = keyToName(site);
+      parts.push(`${nm} ${cnt}`);
       dayTotal += cnt;
-      siteTotals[site] = (siteTotals[site] || 0) + cnt;
+      siteTotals[nm] = (siteTotals[nm] || 0) + cnt;
     }
     workerTotal += dayTotal;
     text += `${+m}/${+d} ${dayNames[dt.getDay()]}  ${parts.join(" / ")}  +${dayTotal}\n`;
@@ -601,7 +607,7 @@ function renderMonthly() {
       html += `<tr><td>${+m}/${+d}(${days[dt.getDay()]})</td>`;
       WORKERS.forEach(w => {
         const wr = dayRec[w] || {};
-        const parts = Object.entries(wr).map(([s,c]) => `${s}${c}`).join(" ");
+        const parts = Object.entries(wr).map(([s,c]) => `${keyToName(s)}${c}`).join(" ");
         html += `<td>${parts || "-"}</td>`;
       });
       html += '</tr>';
@@ -625,7 +631,7 @@ function renderMonthly() {
     WORKERS.forEach(w => {
       let rt = 0;
       html += `<tr><td style="font-weight:700">${w}</td>`;
-      SITES.forEach(s => { const v = totals[w]?.[s.name] || 0; rt += v; html += `<td>${v}</td>`; });
+      SITES.forEach(s => { const v = totals[w]?.[siteKey(s.name)] || 0; rt += v; html += `<td>${v}</td>`; });
       monthGrand += rt;
       html += `<td style="font-weight:700;color:#e94560">${rt}</td></tr>`;
     });
@@ -716,7 +722,8 @@ window.loadEditDate = function() {
     // 기존 값으로 카운트 세팅
     editCounts = {};
     SITES.forEach((site, si) => {
-      if (wr[site.name]) editCounts[si] = wr[site.name];
+      const k = siteKey(site.name);
+      if (wr[k]) editCounts[si] = wr[k];
     });
     renderEditSites();
     delBtn.style.display = Object.keys(wr).length > 0 ? "block" : "none";
@@ -728,7 +735,7 @@ window.loadEditDate = function() {
     html += '<div class="edit-existing-item" style="color:#888">기록 없음</div>';
   } else {
     for (const [w, sites] of Object.entries(dayRec)) {
-      const parts = Object.entries(sites).map(([s,c]) => `${s} x${c}`).join(", ");
+      const parts = Object.entries(sites).map(([s,c]) => `${keyToName(s)} x${c}`).join(", ");
       const total = Object.values(sites).reduce((a,b) => a+b, 0);
       html += `<div class="edit-existing-item"><span>${w}</span><span>${parts} (${total})</span></div>`;
     }
@@ -751,7 +758,7 @@ window.saveEdit = async function() {
 
   const data = {};
   SITES.forEach((site, si) => {
-    if (editCounts[si] > 0) data[site.name] = editCounts[si];
+    if (editCounts[si] > 0) data[siteKey(site.name)] = editCounts[si];
   });
 
   if (Object.keys(data).length === 0) {
@@ -764,7 +771,7 @@ window.saveEdit = async function() {
 
   const msg = document.getElementById("editMsg");
   const [y,m,d] = dk.split("-");
-  const parts = Object.entries(data).map(([k,v]) => `${k} x${v}`).join(", ");
+  const parts = Object.entries(data).map(([k,v]) => `${keyToName(k)} x${v}`).join(", ");
   msg.textContent = `${+m}/${+d} ${worker}: ${parts || "삭제"} 완료!`;
   msg.style.color = "#4CAF50";
   setTimeout(() => { msg.textContent = ""; }, 3000);
