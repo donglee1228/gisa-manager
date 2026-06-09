@@ -261,7 +261,18 @@ const MAX_COUNT = 5;
 const EXPIRY_DAYS = 30;
 const COLORS = ["#4CAF50","#2196F3","#FF9800","#9C27B0","#E91E63","#00BCD4","#FF5722","#607D8B"];
 const DEFAULT_WORKERS = ["이기사"];
-const DEFAULT_SITES = [{name:"소노벨",color:"#4CAF50"},{name:"쿠팡",color:"#2196F3"},{name:"평택쿠팡",color:"#FF9800"},{name:"용인쿠팡(3.5톤)",color:"#9C27B0"}];
+const DEFAULT_SITES = [{name:"소노벨",color:"#4CAF50"},{name:"쿠팡",color:"#2196F3"},{name:"평택쿠팡",color:"#FF9800"},{name:"용인쿠팡(3.5톤)",color:"#9C27B0"},{name:"평택5센터",color:"#E91E63"}];
+
+// ===== 평택5센터 전용 '탕' 단위 (반탕/한탕/두탕) =====
+// 저장 데이터에는 0.5 같은 소수점(.)을 절대 쓰지 않고 "반탕"/"한탕"/"두탕" 문자열만 저장
+// → Firebase 키/값의 점(.) 문제(과거 "용인쿠팡(3.5톤)" 류) 원천 차단. 0.5/1/2 환산은 계산용으로만 사용.
+const TANG_OPTIONS = [{label:"반탕",value:"반탕"},{label:"한탕",value:"한탕"},{label:"두탕",value:"두탕"}];
+const TANG_MAP = {"반탕":0.5,"한탕":1,"두탕":2}; // 회전수 환산표(계산 전용, DB 저장 안 함)
+function isTangSite(name){ return name === "평택5센터"; }
+// 기록 값 → 숫자 회전수 (기존 숫자 기록은 그대로, 탕 문자열은 환산)
+function toNum(c){ return typeof c === "number" ? c : (TANG_MAP[c] || 0); }
+// 기록 값 → 표시 문자열 ("쿠팡 x3" / "평택5센터 반탕")
+function fmtCount(c){ return typeof c === "number" ? "x"+c : c; }
 
 let WORKERS = [];
 let SITES = [];
@@ -283,6 +294,11 @@ function loadConfig() {
       SITES = (val.sites || DEFAULT_SITES).map((s,i) =>
         typeof s === "string" ? {name:s, color:COLORS[i%COLORS.length]} : s
       );
+      // 평택5센터 자동 추가 (기존 현장/기록은 절대 건드리지 않고, 없을 때 1회만 뒤에 덧붙임)
+      if (!SITES.some(s => s.name === "평택5센터")) {
+        SITES.push({name:"평택5센터", color: COLORS[SITES.length % COLORS.length]});
+        set(ref(db, "config/sites"), SITES);
+      }
     } else {
       WORKERS = [...DEFAULT_WORKERS];
       SITES = [...DEFAULT_SITES];
@@ -372,16 +388,25 @@ function renderSites() {
     section.appendChild(label);
     const row = document.createElement("div");
     row.className = "count-row";
-    for (let c = 0; c <= MAX_COUNT; c++) {
+    const opts = isTangSite(site.name)
+      ? TANG_OPTIONS
+      : Array.from({length: MAX_COUNT+1}, (_,c) => ({label:String(c), value:c}));
+    opts.forEach(opt => {
+      const sel = selectedCounts[si] === opt.value;
       const btn = document.createElement("div");
-      btn.className = "count-btn" + (selectedCounts[si] === c ? " selected" : "");
-      btn.textContent = c;
-      btn.style.borderColor = selectedCounts[si] === c ? site.color : "#333";
-      btn.style.background = selectedCounts[si] === c ? site.color + "22" : "#16213e";
-      btn.style.color = selectedCounts[si] === c ? site.color : "#eee";
-      btn.onclick = () => { selectedCounts[si] = c; renderSites(); updateSaveBtn(); };
+      btn.className = "count-btn" + (sel ? " selected" : "");
+      btn.textContent = opt.label;
+      btn.style.borderColor = sel ? site.color : "#333";
+      btn.style.background = sel ? site.color + "22" : "#16213e";
+      btn.style.color = sel ? site.color : "#eee";
+      btn.onclick = () => {
+        // 탕 버튼은 0이 없으므로 다시 누르면 해제, 숫자 버튼은 기존처럼 선택
+        if (isTangSite(site.name) && sel) delete selectedCounts[si];
+        else selectedCounts[si] = opt.value;
+        renderSites(); updateSaveBtn();
+      };
       row.appendChild(btn);
-    }
+    });
     section.appendChild(row);
     container.appendChild(section);
   });
@@ -400,7 +425,7 @@ function renderPrintButtons() {
 function updateSaveBtn() {
   const btn = document.getElementById("saveBtn");
   const hasWorker = selectedWorker !== null;
-  const hasCounts = Object.keys(selectedCounts).length > 0 && Object.values(selectedCounts).some(c => c > 0);
+  const hasCounts = Object.keys(selectedCounts).length > 0 && Object.values(selectedCounts).some(c => toNum(c) > 0);
   btn.disabled = !(hasWorker && hasCounts);
 }
 
@@ -411,12 +436,12 @@ window.saveRecord = async function() {
   const dk = dateKey(wd);
   const worker = WORKERS[selectedWorker];
   const data = {};
-  SITES.forEach((site, si) => { if (selectedCounts[si] > 0) data[siteKey(site.name)] = selectedCounts[si]; });
+  SITES.forEach((site, si) => { if (toNum(selectedCounts[si]) > 0) data[siteKey(site.name)] = selectedCounts[si]; });
   if (Object.keys(data).length === 0) return;
   await set(ref(db, `records/${dk}/${worker}`), data);
   await set(ref(db, "lastActivity"), Date.now());
   const msg = document.getElementById("saveMsg");
-  const parts = Object.entries(data).map(([k,v]) => `${keyToName(k)} x${v}`).join(", ");
+  const parts = Object.entries(data).map(([k,v]) => `${keyToName(k)} ${fmtCount(v)}`).join(", ");
   msg.textContent = `${formatDate(wd)} ${worker}: ${parts} 저장!`;
   msg.style.color = "#4CAF50";
   setTimeout(() => { msg.textContent = ""; }, 3000);
@@ -442,9 +467,9 @@ function renderTodayRecords() {
     card.className = "record-card";
     const parts = Object.entries(sites).map(([s,c]) => {
       const site = SITES.find(x => siteKey(x.name) === s);
-      return `<span style="color:${site ? site.color : '#eee'}">${site ? site.name : s} x${c}</span>`;
+      return `<span style="color:${site ? site.color : '#eee'}">${site ? site.name : s} ${fmtCount(c)}</span>`;
     }).join("");
-    const total = Object.values(sites).reduce((a,b) => a+b, 0);
+    const total = Object.values(sites).reduce((a,b) => a+toNum(b), 0);
     card.innerHTML = `<div class="record-header">${worker} (${total}회)</div><div class="record-detail">${parts}</div>`;
     container.appendChild(card);
   }
@@ -490,7 +515,7 @@ function renderHistory() {
     for (const dk of monthDates) {
       for (const [w, sites] of Object.entries(allRecords[dk] || {})) {
         if (!totals[w]) totals[w] = {};
-        for (const [s, c] of Object.entries(sites)) { totals[w][s] = (totals[w][s] || 0) + c; }
+        for (const [s, c] of Object.entries(sites)) { totals[w][s] = (totals[w][s] || 0) + toNum(c); }
       }
     }
     html += `<h3 style="margin-top:20px;font-size:15px;color:#aaa">${+curMonth.split("-")[1]}월 합계</h3>`;
@@ -538,8 +563,8 @@ window.printWorker = function(worker) {
     for (const [site, cnt] of Object.entries(wr)) {
       const nm = keyToName(site);
       parts.push(`${nm} ${cnt}`);
-      dayTotal += cnt;
-      siteTotals[nm] = (siteTotals[nm] || 0) + cnt;
+      dayTotal += toNum(cnt);
+      siteTotals[nm] = (siteTotals[nm] || 0) + toNum(cnt);
     }
     workerTotal += dayTotal;
     text += `${+m}/${+d} ${dayNames[dt.getDay()]}  ${parts.join(" / ")}  +${dayTotal}\n`;
@@ -620,11 +645,11 @@ function renderMonthly() {
     for (const dk of monthDates) {
       for (const [w, sites] of Object.entries(allRecords[dk] || {})) {
         if (!totals[w]) totals[w] = {};
-        for (const [s, c] of Object.entries(sites)) { totals[w][s] = (totals[w][s] || 0) + c; }
+        for (const [s, c] of Object.entries(sites)) { totals[w][s] = (totals[w][s] || 0) + toNum(c); }
       }
     }
     let monthGrand = 0;
-    for (const w of Object.keys(totals)) for (const c of Object.values(totals[w])) monthGrand += c;
+    for (const w of Object.keys(totals)) for (const c of Object.values(totals[w])) monthGrand += toNum(c);
 
     html += `<div class="month-block">`;
     // 드롭다운 헤더
@@ -700,9 +725,9 @@ window.printMonth = function(mk) {
       for (const [site, cnt] of Object.entries(wr)) {
         const nm = keyToName(site);
         parts.push(`${nm} ${cnt}`);
-        dayTotal += cnt;
-        wSite[nm] = (wSite[nm] || 0) + cnt;
-        grandSite[nm] = (grandSite[nm] || 0) + cnt;
+        dayTotal += toNum(cnt);
+        wSite[nm] = (wSite[nm] || 0) + toNum(cnt);
+        grandSite[nm] = (grandSite[nm] || 0) + toNum(cnt);
       }
       wTotal += dayTotal;
       text += `${+m}/${+d} ${dayNames[dt.getDay()]}  ${parts.join(" / ")}  +${dayTotal}\n`;
@@ -769,16 +794,24 @@ function renderEditSites() {
     section.appendChild(label);
     const row = document.createElement("div");
     row.className = "count-row";
-    for (let c = 0; c <= MAX_COUNT; c++) {
+    const opts = isTangSite(site.name)
+      ? TANG_OPTIONS
+      : Array.from({length: MAX_COUNT+1}, (_,c) => ({label:String(c), value:c}));
+    opts.forEach(opt => {
+      const sel = editCounts[si] === opt.value;
       const btn = document.createElement("div");
-      btn.className = "count-btn" + (editCounts[si] === c ? " selected" : "");
-      btn.textContent = c;
-      btn.style.borderColor = editCounts[si] === c ? site.color : "#333";
-      btn.style.background = editCounts[si] === c ? site.color + "22" : "#16213e";
-      btn.style.color = editCounts[si] === c ? site.color : "#eee";
-      btn.onclick = () => { editCounts[si] = c; renderEditSites(); updateEditBtn(); };
+      btn.className = "count-btn" + (sel ? " selected" : "");
+      btn.textContent = opt.label;
+      btn.style.borderColor = sel ? site.color : "#333";
+      btn.style.background = sel ? site.color + "22" : "#16213e";
+      btn.style.color = sel ? site.color : "#eee";
+      btn.onclick = () => {
+        if (isTangSite(site.name) && sel) delete editCounts[si];
+        else editCounts[si] = opt.value;
+        renderEditSites(); updateEditBtn();
+      };
       row.appendChild(btn);
-    }
+    });
     section.appendChild(row);
     container.appendChild(section);
   });
@@ -811,8 +844,8 @@ window.loadEditDate = function() {
     html += '<div class="edit-existing-item" style="color:#888">기록 없음</div>';
   } else {
     for (const [w, sites] of Object.entries(dayRec)) {
-      const parts = Object.entries(sites).map(([s,c]) => `${keyToName(s)} x${c}`).join(", ");
-      const total = Object.values(sites).reduce((a,b) => a+b, 0);
+      const parts = Object.entries(sites).map(([s,c]) => `${keyToName(s)} ${fmtCount(c)}`).join(", ");
+      const total = Object.values(sites).reduce((a,b) => a+toNum(b), 0);
       html += `<div class="edit-existing-item"><span>${w}</span><span>${parts} (${total})</span></div>`;
     }
   }
@@ -834,7 +867,7 @@ window.saveEdit = async function() {
 
   const data = {};
   SITES.forEach((site, si) => {
-    if (editCounts[si] > 0) data[siteKey(site.name)] = editCounts[si];
+    if (toNum(editCounts[si]) > 0) data[siteKey(site.name)] = editCounts[si];
   });
 
   if (Object.keys(data).length === 0) {
@@ -847,7 +880,7 @@ window.saveEdit = async function() {
 
   const msg = document.getElementById("editMsg");
   const [y,m,d] = dk.split("-");
-  const parts = Object.entries(data).map(([k,v]) => `${keyToName(k)} x${v}`).join(", ");
+  const parts = Object.entries(data).map(([k,v]) => `${keyToName(k)} ${fmtCount(v)}`).join(", ");
   msg.textContent = `${+m}/${+d} ${worker}: ${parts || "삭제"} 완료!`;
   msg.style.color = "#4CAF50";
   setTimeout(() => { msg.textContent = ""; }, 3000);
