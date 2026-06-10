@@ -148,6 +148,18 @@ h2{text-align:center;font-size:18px;color:#aaa;margin-bottom:16px}
 .month-mini{font-size:13px;color:#e94560;font-weight:700}
 .month-chev{font-size:13px;color:#888;width:16px;text-align:center}
 .month-body{margin-top:12px}
+/* 정비/경비 탭 */
+.maint-memo{width:100%;min-height:90px;padding:12px;background:#1a1a2e;border:1px solid #444;border-radius:8px;color:#eee;font-size:15px;resize:vertical;font-family:inherit;line-height:1.5;color-scheme:dark}
+.maint-amount{width:100%;padding:12px;background:#1a1a2e;border:1px solid #444;border-radius:8px;color:#eee;font-size:16px;color-scheme:dark}
+.maint-card{background:#16213e;border-radius:12px;padding:14px;margin:8px 0}
+.maint-card-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.maint-badge{font-size:12px;font-weight:700;padding:3px 11px;border-radius:20px}
+.maint-card-date{font-size:13px;color:#888}
+.maint-card-memo{font-size:15px;color:#eee;white-space:pre-wrap;line-height:1.55;margin:6px 0}
+.maint-card-amount{font-size:15px;font-weight:700;color:#4CAF50;text-align:right}
+.maint-month-head{display:flex;justify-content:space-between;align-items:center;margin:18px 0 4px;padding:0 4px}
+.maint-month-title{font-size:16px;font-weight:800;color:#aaa}
+.maint-month-sum{font-size:14px;font-weight:700;color:#e94560}
 </style>
 </head>
 <body>
@@ -196,6 +208,24 @@ h2{text-align:center;font-size:18px;color:#aaa;margin-bottom:16px}
       </div>
       <!-- /월별 탭 -->
 
+      <!-- 정비/경비 탭 -->
+      <div class="tab-page" id="tabMaint">
+        <h2>경비 · 정비 기록</h2>
+        <div class="section-label">날짜</div>
+        <input type="date" id="maintDate" class="edit-date">
+        <div class="section-label" style="margin-top:12px">구분</div>
+        <div class="worker-row" id="maintTypeRow"></div>
+        <div class="section-label">내용 (자세히 적기)</div>
+        <textarea id="maintMemo" class="maint-memo" placeholder="예: 엔진오일 교체, 앞타이어 2개 교체 + 위치교환, 어디 정비소에서 했는지 등 자세히..."></textarea>
+        <div class="section-label" style="margin-top:12px">금액 (원) · 없으면 비워두기</div>
+        <input type="number" id="maintAmount" class="maint-amount" inputmode="numeric" placeholder="예: 80000">
+        <button class="save-btn" id="maintSaveBtn" onclick="saveMaint()">기록 저장</button>
+        <div class="save-msg" id="maintMsg"></div>
+        <div class="divider"></div>
+        <div id="maintList"></div>
+      </div>
+      <!-- /정비 탭 -->
+
       </div>
 
       <!-- 하단 탭바 -->
@@ -205,6 +235,9 @@ h2{text-align:center;font-size:18px;color:#aaa;margin-bottom:16px}
         </div>
         <div class="tab-item" id="tabBtnMonthly" onclick="switchTab('monthly')">
           <span class="tab-ico">&#128197;</span>월별
+        </div>
+        <div class="tab-item" id="tabBtnMaint" onclick="switchTab('maint')">
+          <span class="tab-ico">&#128295;</span>정비
         </div>
       </div>
 
@@ -595,12 +628,20 @@ window.closePrint = function() { document.getElementById("printOverlay").classLi
 
 // ===== 탭 전환 =====
 window.switchTab = function(tab) {
-  const isRecord = tab === "record";
-  document.getElementById("tabRecord").classList.toggle("active", isRecord);
-  document.getElementById("tabMonthly").classList.toggle("active", !isRecord);
-  document.getElementById("tabBtnRecord").classList.toggle("active", isRecord);
-  document.getElementById("tabBtnMonthly").classList.toggle("active", !isRecord);
-  if (!isRecord) renderMonthly();
+  const tabs = ["record","monthly","maint"];
+  const pageId = {record:"tabRecord", monthly:"tabMonthly", maint:"tabMaint"};
+  const btnId  = {record:"tabBtnRecord", monthly:"tabBtnMonthly", maint:"tabBtnMaint"};
+  tabs.forEach(t => {
+    document.getElementById(pageId[t]).classList.toggle("active", t === tab);
+    document.getElementById(btnId[t]).classList.toggle("active", t === tab);
+  });
+  if (tab === "monthly") renderMonthly();
+  if (tab === "maint") {
+    const di = document.getElementById("maintDate");
+    if (!di.value) di.value = dateKey(getWorkDate());
+    renderMaintTypeRow();
+    renderMaint();
+  }
   window.scrollTo(0, 0);
 };
 
@@ -980,7 +1021,97 @@ window.addSite = function() {
   renderSettingsSites();
 };
 
+// ===== 정비/경비 (records/config 와 완전히 분리된 maintenance 노드) =====
+const MAINT_TYPES = [
+  {label:"경비", color:"#FF9800"},
+  {label:"정비", color:"#2196F3"},
+  {label:"수리", color:"#e94560"},
+];
+let maintType = "경비";
+let allMaint = {};
+
+function maintColor(type){ const t = MAINT_TYPES.find(x => x.label === type); return t ? t.color : "#888"; }
+function wonFmt(n){ return (n||0).toLocaleString("ko-KR") + "원"; }
+function escapeHtml(s){ return (s||"").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c])); }
+
+function renderMaintTypeRow() {
+  const row = document.getElementById("maintTypeRow");
+  row.innerHTML = "";
+  MAINT_TYPES.forEach(t => {
+    const sel = maintType === t.label;
+    const btn = document.createElement("div");
+    btn.className = "worker-btn" + (sel ? " selected" : "");
+    btn.textContent = t.label;
+    btn.style.borderColor = sel ? t.color : "#333";
+    btn.style.background = sel ? t.color + "22" : "#16213e";
+    btn.style.color = sel ? t.color : "#eee";
+    btn.onclick = () => { maintType = t.label; renderMaintTypeRow(); };
+    row.appendChild(btn);
+  });
+}
+
+window.saveMaint = async function() {
+  const date = document.getElementById("maintDate").value;
+  const memo = document.getElementById("maintMemo").value.trim();
+  const amount = parseInt(document.getElementById("maintAmount").value, 10) || 0;
+  const msg = document.getElementById("maintMsg");
+  if (!date) { msg.textContent = "날짜를 선택하세요"; msg.style.color = "#e94560"; return; }
+  if (!memo && !amount) { msg.textContent = "내용이나 금액을 입력하세요"; msg.style.color = "#e94560"; return; }
+  const id = "m_" + Date.now() + "_" + Math.floor(Math.random()*1000);
+  await set(ref(db, `maintenance/${id}`), {date, type: maintType, memo, amount, ts: Date.now()});
+  await set(ref(db, "lastActivity"), Date.now());
+  msg.textContent = "저장 완료!";
+  msg.style.color = "#4CAF50";
+  document.getElementById("maintMemo").value = "";
+  document.getElementById("maintAmount").value = "";
+  setTimeout(() => { msg.textContent = ""; }, 3000);
+};
+
+window.deleteMaint = async function(id) {
+  if (confirm("이 기록을 삭제할까요?")) {
+    await remove(ref(db, `maintenance/${id}`));
+  }
+};
+
+function renderMaint() {
+  const area = document.getElementById("maintList");
+  const entries = Object.entries(allMaint).map(([id, v]) => ({id, ...v}));
+  if (entries.length === 0) {
+    area.innerHTML = '<div class="month-empty">아직 기록이 없습니다</div>';
+    return;
+  }
+  // 날짜 내림차순(최신 먼저), 같은 날은 입력순 최신 먼저
+  entries.sort((a,b) => a.date === b.date ? (b.ts||0)-(a.ts||0) : (a.date < b.date ? 1 : -1));
+  const groups = {};
+  for (const e of entries) { const mk = (e.date||"").slice(0,7); (groups[mk] = groups[mk] || []).push(e); }
+  const days = ["일","월","화","수","목","금","토"];
+  const months = Object.keys(groups).sort().reverse();
+  let html = "";
+  for (const mk of months) {
+    const [my, mm] = mk.split("-");
+    const list = groups[mk];
+    const sum = list.reduce((a,e) => a + (e.amount||0), 0);
+    html += `<div class="maint-month-head"><span class="maint-month-title">${+my}년 ${+mm}월</span><span class="maint-month-sum">${wonFmt(sum)}</span></div>`;
+    for (const e of list) {
+      const [y,m,d] = e.date.split("-");
+      const dt = new Date(+y, +m-1, +d);
+      const col = maintColor(e.type);
+      html += `<div class="maint-card">`;
+      html += `<div class="maint-card-top"><span class="maint-badge" style="background:${col}22;color:${col}">${e.type}</span>`;
+      html += `<span class="maint-card-date">${+m}/${+d}(${days[dt.getDay()]}) <span style="color:#e94560;cursor:pointer;margin-left:6px" onclick="deleteMaint('${e.id}')">[x]</span></span></div>`;
+      if (e.memo) html += `<div class="maint-card-memo">${escapeHtml(e.memo)}</div>`;
+      if (e.amount) html += `<div class="maint-card-amount">${wonFmt(e.amount)}</div>`;
+      html += `</div>`;
+    }
+  }
+  area.innerHTML = html;
+}
+
 // ===== Firebase 리스너 =====
+onValue(ref(db, "maintenance"), snap => {
+  allMaint = snap.val() || {};
+  if (document.getElementById("tabMaint").classList.contains("active")) renderMaint();
+});
 onValue(ref(db, "records"), snap => {
   allRecords = snap.val() || {};
   renderTodayRecords();
